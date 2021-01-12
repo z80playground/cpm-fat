@@ -6,7 +6,7 @@
 ; button to take you to the monitor, you can.
 
 ; CORE takes the top 3K of memory, $F400 - $FFFF
-; It assembles to 2.53K
+; It assembles to 2.53K right now.
 
 include "locations.asm"
 

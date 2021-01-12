@@ -6,8 +6,12 @@ For more details see https://8bitStack.co.uk
 For videos about the Z80 Playground see https://youtube.com/playlist?list=PL3arA6T9kycptsudBx3MyLbHCOjdoBhO6
 
 The main parts of this repo are:
-a
-b
-c
-d
-e
+
+CORE.ASM
+
+BIOS.ASM
+
+BDOS.ASM
+
+CCP.ASM
+
