@@ -54,7 +54,7 @@ can_do_dir:
     inc hl
     ld (hl), 0
     dec hl
-    call CORE_open_file
+    call open_file
 
 ignore_user:
     ld hl, STAR_DOT_STAR                    ; Specify search pattern "*"

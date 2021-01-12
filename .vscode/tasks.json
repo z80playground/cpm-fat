@@ -1,0 +1,332 @@
+{
+    // See https://go.microsoft.com/fwlink/?LinkId=733558
+    // for the documentation about the tasks.json format
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "CPM-HEX",
+            "type": "process",
+            "command": "pasmo",
+            "args": ["--hex", "cpm.asm", "cpm.hex", "cpm.symbols"],
+            "problemMatcher": [],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared",
+                "showReuseMessage": true,
+                "clear": true
+            }
+        },
+        {
+            "label": "Z80CCP",
+            "type": "process",
+            "command": "pasmo",
+            "args": ["--bin", "z80ccp.asm", "z80ccp.bin"],
+            "problemMatcher": [],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared",
+                "showReuseMessage": true,
+                "clear": true
+            }
+        },
+        {
+            "label": "SD",
+            "type": "process",
+            "command": "pasmo",
+            "args": ["--bin", "SD.asm", "SD.com"],
+            "problemMatcher": [],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared",
+                "showReuseMessage": true,
+                "clear": true
+            }
+        },
+        {
+            "label": "CPM-BIN",
+            "type": "process",
+            "command": "pasmo",
+            "args": ["--bin", "cpm.asm", "cpm.bin", "cpm.symbols"],
+            "problemMatcher": [],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared",
+                "showReuseMessage": true,
+                "clear": true
+            }
+        },
+        {
+            "label": "CCP",
+            "type": "process",
+            "command": "pasmo",
+            "args": ["--bin", "ccp.asm", "ccp.bin", "ccp.symbols"],
+            "problemMatcher": [],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared",
+                "showReuseMessage": true,
+                "clear": true
+            }
+        },
+        {
+            "label": "BDOS",
+            "type": "process",
+            "command": "pasmo",
+            "args": ["--bin", "bdos.asm", "bdos.bin", "bdos.symbols"],
+            "problemMatcher": [],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared",
+                "showReuseMessage": true,
+                "clear": true
+            }
+        },
+        {
+            "label": "BIOS",
+            "type": "process",
+            "command": "pasmo",
+            "args": ["--bin", "bios.asm", "bios.bin"],
+            "problemMatcher": [],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared",
+                "showReuseMessage": true,
+                "clear": true
+            }
+        },
+        {
+            "label": "CORE",
+            "type": "process",
+            "command": "pasmo",
+            "args": ["--bin", "core.asm", "core.bin"],
+            "problemMatcher": [],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared",
+                "showReuseMessage": true,
+                "clear": true
+            }
+        },
+        {
+            "label": "Z80CCP",
+            "type": "process",
+            "command": "pasmo",
+            "args": ["--bin", "Z80CCP.asm", "z80ccp.bin"],
+            "problemMatcher": [],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared",
+                "showReuseMessage": true,
+                "clear": true
+            }
+        },
+        {
+            "label": "XR",
+            "type": "process",
+            "command": "pasmo",
+            "args": ["--bin", "xr.asm", "xr.com"],
+            "problemMatcher": [],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared",
+                "showReuseMessage": true,
+                "clear": true
+            }
+        },
+        {
+            "label": "STAT",
+            "type": "process",
+            "command": "pasmo",
+            "args": ["--bin", "stat.asm", "stat.com"],
+            "problemMatcher": [],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared",
+                "showReuseMessage": true,
+                "clear": true
+            }
+        },
+        {
+            "label": "Program",
+            "type": "process",
+            "command": "pasmo",
+            "args": ["--bin", "program.asm", "program.com"],
+            "problemMatcher": [],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared",
+                "showReuseMessage": true,
+                "clear": true 
+            }
+        },
+        {
+            "label": "push_to_eeprom",
+            "type": "process",
+            "command": "c:\\Program Files (x86)\\teraterm\\ttpmacro.exe",
+            "args": ["/I", "/V", "send_cpm.ttl"],
+            "problemMatcher": [],
+            "group": "test",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared",
+                "showReuseMessage": true,
+                "clear": true
+            }
+        },
+        {
+            "label": "copy_to_memory_stick",
+            "type": "shell",
+            "command": "copy",
+            "args": ["C:\\Users\\john.squires\\Dropbox\\z80\\cpm\\*.bin", "f:\\CPM\\"],
+            "problemMatcher": [],
+            "group": "test",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared",
+                "showReuseMessage": true,
+                "clear": true
+            }
+        },
+        {
+            "label": "copy_to_memory_stickD",
+            "type": "shell",
+            "command": "copy",
+            "args": ["C:\\Users\\john.squires\\Dropbox\\z80\\cpm\\*.bin", "D:\\CPM\\"],
+            "problemMatcher": [],
+            "group": "test",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared",
+                "showReuseMessage": true,
+                "clear": true
+            }
+        },
+        {
+            "label": "copy_to_memory_stick2",
+            "type": "shell",
+            "command": "copy",
+            "args": ["C:\\Users\\john.squires\\Dropbox\\z80\\cpm\\bios.bin", "f:\\bios.bin"],
+            "problemMatcher": [],
+            "group": "test",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared",
+                "showReuseMessage": true,
+                "clear": true
+            }
+        },
+        {
+            "label": "copy_sd",
+            "type": "shell",
+            "command": "copy",
+            "args": ["C:\\Users\\john.squires\\Dropbox\\z80\\cpm\\sd.com", "f:\\cpm\\disks\\A\\sd.com"],
+            "problemMatcher": [],
+            "group": "test",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared",
+                "showReuseMessage": true,
+                "clear": true
+            }
+        },
+        {
+            "label": "copy_xr",
+            "type": "shell",
+            "command": "copy",
+            "args": ["C:\\Users\\john.squires\\Dropbox\\z80\\cpm\\xr.com", "f:\\cpm\\disks\\A\\xr.com"],
+            "problemMatcher": [],
+            "group": "test",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared",
+                "showReuseMessage": true,
+                "clear": true
+            }
+        },
+
+    ]
+}
