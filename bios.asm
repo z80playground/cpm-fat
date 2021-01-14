@@ -34,8 +34,8 @@ BOOT:
     db 27,'[H'                  ; cursor home
     db 27,'[0m'                  ; clear attributes
     db 'CP/M v2.2',13,10
-    db 'For Z80 Playground - 8bitStack.co.uk',13,10
-    db 'Dec 2020 v1.0',13,10
+    db 'Z80 Playground - 8bitStack.co.uk',13,10
+    db 'Rel 1.02',13,10
     db 'Inspired by Digital Research',13,10
     db 13,10
     db '64K system with drives A thru P',13,10
@@ -87,7 +87,7 @@ WBOOT:
 
     call CORE_message
     db 27,'[0m',0                  ; clear attributes
-
+    ;call CORE_message
     ; Load the CCP to the proper location
     ld hl, ccp_name
     call CORE_copy_filename_to_buffer

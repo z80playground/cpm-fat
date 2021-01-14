@@ -1,5 +1,9 @@
 ; memorystick.asm
 
+store_de:
+    dw 0
+store_a:
+    db 0
 ;-----------------------------------------------------------------
 ; For DIRectory listing, the filename is passed in the filename_buffer.
 ; DE -> DMA AREA
@@ -7,14 +11,13 @@
 ; It will be something like A/ffffffff.xxx
 ; A result gets put into the area pointed to by DE, normally the DMA area, in 8.3 format
 dir:
-    push de
-    push af
+    ld (store_de), de
+    ld (store_a), a
+
     call disk_on
     call connect_to_usb_drive
     jr z, can_do_dir
 
-    pop af
-    pop de
     call message
     db 'ERROR: Cannot read USB Disk.',13,10,0
     call disk_off
@@ -44,7 +47,7 @@ can_do_dir:
     call open_file
 
     ; Now user number (if greater than 0)
-    pop af
+    ld a, (store_a)
     cp 0
     jr z, ignore_user
 
@@ -62,7 +65,7 @@ ignore_user:
 
     ; Read a file if there is something to read
 dir_loop:
-    ; at this point DE is on stack, containing address of dma-area
+    ; at this point DE is in store_de, containing address of dma-area
     cp USB_INT_DISK_READ
     jr z, dir_loop_good
 
@@ -75,7 +78,6 @@ dir_loop:
     call message
     db 'USB Drive ERROR: FAT only!',13,10,0
 dir_no_file:
-    pop de
     call disk_off
     ld a, 255
     ret
@@ -89,17 +91,15 @@ dir_loop_good:
     call read_data_bytes_into_buffer    ; read them into disk_buffer
     cp 32                               ; Did we read at least 32 bytes?
     jr nc, good_length
-    pop de
     jp dir_next
 
 good_length:
-    ; at this point DE is on stack, containing address of dma-area
+    ; at this point DE is in store_de, containing address of dma-area
     ; Get the attributes for this entry. $02 = system, $04 = hidden, $10 = directory
     call disk_off
     ld a, (disk_buffer+11)
     and $16                         ; Check for hidden or system files, or directories
     jp z, it_is_not_system          
-    pop de                          ; get de back off stack
     jp dir_next                     ; and skip accordingly.
 
 it_is_not_system:
@@ -124,7 +124,6 @@ matching_loop1
     jr z, matching_loop_good
     cp (hl)
     jr z, matching_loop_good
-    pop de                      ; retrieve de
     jr dir_next
 
 matching_loop_good:
@@ -135,9 +134,8 @@ matching_loop_good:
     ; Copy 11 byte filename + extension
     ld bc, 11
     ld hl, disk_buffer
-    pop de                  ; retrive de, the location to copy to
-    push de                 ; push de again
-    ld a, 0
+    ld de, (store_de)
+    ld a, (store_a)                 ; Fill in user number in FCB.
     ld (de), a
     inc de
     ldir
@@ -161,18 +159,34 @@ matching_loop_good:
     rl c
     rl b
 
-    ld h, l
+    ld l, h
     ld h, c
     ld c, b
     ld b, 0                             ; We've shifted right 8 bits, so effectively divided by 128!
 
-    pop de
-    push de
-    call set_random_pointer_in_fcb      ; store hl in FCB random pointer (bc is thrown away!)
+    ld de, (store_de)
 
-    ;ld bc, 0
-    ;ld de, 1
-    ;call set_file_pointer_in_fcb
+    push bc                             ; Store the size that is in bchl
+    push hl
+    call set_random_pointer_in_fcb      ; store hl in FCB random pointer (bc is thrown away!)
+    pop hl
+    pop bc                              ; restore bchl
+
+    ex de, hl                           ; hl = fcb, bcde = filesize
+    ld hl, (store_de)
+    call set_file_size_in_fcb
+
+    ; Clear all 16 disk allocation bytes. TODO: Actually, fill with sensible values
+    ld de, (store_de)
+    ld hl, 16
+    add hl, de
+    ex de, hl
+    ld b, 16+4
+    ld a, 0
+clear_allocation_loop:
+    ld (de), a
+    inc de
+    djnz clear_allocation_loop    
 
     ; Show what we are returning:
     ;call message 
@@ -181,14 +195,11 @@ matching_loop_good:
     ;ld b, 11
 good_length1:
     ld a, 0                                 ; 0 = success
-    pop de                                  ; retrieve de
     ret
 
 dir_next:
-    push de
     ld a, FILE_ENUM_GO                      ; Go to next entry in the directory
     call send_command_byte
-
     call read_status_byte
     jp dir_loop
 
@@ -575,6 +586,75 @@ set_random_pointer_in_fcb:
     ld (hl), 0
     ex de, hl
     pop de
+    ret
+
+set_file_size_in_fcb:
+    ; Pass HL -> FCB (Note that this is an unusual way to pass it in)
+    ; Pass file pointer (in 128-byte records) in bcde.
+    ; Preserves hl
+
+    ; The following details are from http://www.primrosebank.net/computers/cpm/cpm_software_mfs.htm
+    ; RC = record counter, goes from 0 to $80. $80 means full, and represents 128*128=16K.
+    ; EX = 0 for files < 16K, otherwise 1 - 31 for Extents of 16K each.
+    ; S2 = high byte for the EXc ounter, so if EX wants to be bigger than 31, overflow it into here.
+
+    ; Split bcde into S2, EX & RC.
+    ; To do this:
+    ; RC = e & %0111 1111               (i.e. a number 0..127)
+    ; Divide bcde by 128                (Shift right 7 bits, or shift left 1 bit then right 8)
+    ; EX = e & %0001 1111               (i.e. it has a max of 31)
+    ; Shift left 3 places
+    ; S2 = d
+
+    ; RC = e & %0111 1111
+    push hl
+    ld a, e
+    and %01111111                       ; RC is in A
+
+    sla e                               ; Shift all left by 1 bit
+    rl d
+    rl c
+    rl b
+
+    ld e, d                             ; Shift all right by 8 bits
+    ld d, c
+    ld c, b
+    ld b, 0                             ; We've effectively shifted right by 7 bits
+
+    ld bc, 15                           ; ex is as FCB+12, s2 is at FCB+14, rc is at FCB + 15
+    add hl, bc                          ; hl -> FCB.RC
+    ld (hl), a                          ; RC is now stored in FCB
+
+    dec hl                              
+    dec hl                              
+    dec hl                              ; hl -> FCB.EX
+    ld a, e
+    and %00011111                       ; EX is in A
+    ld (hl), a
+
+    sla e                               ; Shift all left by 1 bit
+    rl d
+    rl c
+    rl b
+    sla e                               ; Shift all left by 1 bit
+    rl d
+    rl c
+    rl b
+    sla e                               ; Shift all left by 1 bit
+    rl d
+    rl c
+    rl b
+
+    inc hl
+    ld a, 0
+    ld (hl), 0                          ; Blank out the mystery byte called "unused"
+    inc hl                              ; hl -> FCB.S2
+
+    ld a, d
+    and %00011111                       ; S2 is in A
+    ld (hl), a
+
+    pop hl
     ret
 
 convert_user_number_to_folder_name:

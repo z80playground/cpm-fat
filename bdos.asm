@@ -44,7 +44,7 @@ BDOS_ok:
 
     call call_hl
 
-    ; Now return
+    ; Now return. So anything that wants to return a value in HL should do ld a,l ld b,h first
     ld l, a                     ; This is how the
     ld h,b                      ; BDOS does return values.
     ret
@@ -440,20 +440,13 @@ BDOS_Search_for_Next:
 	; call CORE_message
 	; db 'Search_Nxt',13,10,0
 
+    ; TODO: What's all this hl business?
     ld hl, (dma_address)
     push hl
     ld de, (dma_address)
+    ld a, (current_user)
     call CORE_dir_next                            ; returns 0 = success, 255 = fail
     pop hl
-    push af
-
-    ; Set the file size. HL -> FCB, file size is in bcde.
-    ld bc, 0
-    ld de, 4000                         ; This is the number of 128 byte sectors
-                                        ; So divide this by 8 to get KB.
-    call set_file_size_in_fcb
-
-    pop af
 	ret
 
 BDOS_Delete_File:
@@ -727,8 +720,9 @@ BDOS_Return_Login_Vector:
     ;call show_bdos_message
 	;call CORE_message
 	;db 'Ret_Log_Vec',13,10,0
-    ld a, 1
     ld hl, $FFFF ; All drives are always logged in
+    ld a, l 
+    ld b, h
 	ret
 
 BDOS_Return_Current_Disk:
@@ -764,7 +758,8 @@ BDOS_Get_Addr_Alloc:
 	;call CORE_message
 	;db 'Get_Addr_Alloc',13,10,0
     ld hl, DISKALLOC
-    ld a, 1
+    ld a, l 
+    ld b, h
 	ret
 
 BDOS_Write_Protect_Disk:
@@ -792,13 +787,17 @@ BDOS_Set_File_Attributes:
 	ret
 
 BDOS_Get_Addr_Disk_Parms:
-    ;call show_bdos_message
-	;call CORE_message
-	;db 'Get_Addr_Disk_Parms',13,10,0
+    ; call show_bdos_message
+	; call CORE_message
+	; db 'Get_Addr_Disk_Parms ',0
+    ; ld hl, dpblk
+    ; call CORE_show_hl_as_hex
+    ; call CORE_newline
     ; Returns address in HL
     ;ld hl, DISKPARAMS
     ld hl, dpblk
-    ld a, 1
+    ld a, l 
+    ld b, h
 	ret
 
 BDOS_Set_Get_User_Code:
@@ -865,8 +864,8 @@ BDOS_Read_Random2:
 BDOS_Read_Random_fail:
     call CORE_close_file                             
     call clear_current_fcb
-    ld a, 1
     call CORE_disk_off
+    ld a, 1                 ; TODO: Shouldn't this be 255???
     ret
 
 BDOS_Write_Random:
@@ -909,7 +908,7 @@ BDOS_Write_Random_fail:
     call CORE_close_file                             ; Need to close the file to flush the data out to disk
     call clear_current_fcb
     call CORE_disk_off
-    ld a, 1                                         ; Return error code
+    ld a, 1                                         ; Return error code TODO: 255???
 	ret
 
 convert_random_pointer_to_normal_pointer:
@@ -966,14 +965,15 @@ BDOS_Compute_File_Size:
     rl c
     rl b
 
-    ld h, l
+    ld l, h
     ld h, c
     ld c, b
     ld b, 0                             ; We've shifted right 8 bits, so effectively divided by 128!
 
     ; Store in FCB
     pop de                                          ; Get the FCB back
-    call CORE_set_random_pointer_in_fcb                  ; store hl in FCB random pointer (bc is thrown away!)
+    call CORE_set_random_pointer_in_fcb             ; store hl in FCB random pointer (bc is thrown away!)
+    call show_fcb
 
     ; Close the file.
     call CORE_close_file
@@ -1067,16 +1067,16 @@ BDOS_ERROR_MODE:
 ;-------------------------------------------------
 ;
 ; This is my understanding of the bytes in a FCB...
-; DRIVE     1   0 = default, 1..16 = A..P
-; FILENAME  8   Filename in ASCII uppercase. Bit 7s are for attributes.
-; TYPE      3   Extension is ASCII uppercase. Bit 7s are for attributes.
-; EX        1   Extent Low Byte. An extent is 16384 bytes.
-; S1        1   
-; S2        1   Extent High Byte.
-; RC        1
-; AL        16
-; CR        1   Current Record. A record is 128 bytes. But this CR goes 0..127, so max is 16384
-; RRR       3   
+; DRIVE     1   0 = default, 1..16 = A..P                                                           0
+; FILENAME  8   Filename in ASCII uppercase. Bit 7s are for attributes.                             1-8
+; TYPE      3   Extension is ASCII uppercase. Bit 7s are for attributes.                            9-11
+; EX        1   Extent Low Byte. An extent is 16384 bytes.                                          12    
+; S1        1                                                                                       13
+; S2        1   Extent High Byte.                                                                   14
+; RC        1   Record count for this extent (0-127)                                                15
+; AL        16                                                                                      16-31
+; CR        1   Current Record. A record is 128 bytes. But this CR goes 0..127, so max is 16384     32
+; RRR       3                                                                                       33-35
 
 ; So, to work out the current position in the file you need:
 ; (S2 * 256 + EX) * 16384  +  CR * 128 = file pointer in bytes
@@ -1233,73 +1233,6 @@ set_file_pointer_in_fcb:
     
     ld bc, 18
     add hl, bc                          ; hl -> FCB.CR
-    ld (hl), a
-
-    pop hl
-    ret
-
-set_file_size_in_fcb:
-    ; Pass HL -> FCB (Note that this is an unusual way to pass it in)
-    ; Pass file pointer (in 128-byte records) in bcde.
-    ; Preserves hl
-
-    ; The following details are from http://www.primrosebank.net/computers/cpm/cpm_software_mfs.htm
-    ; RC = record counter, goes from 0 to $80. $80 means full, and represents 128*128=16K.
-    ; EX = 0 for files < 16K, otherwise 1 - 31 for Extents of 16K each.
-    ; S2 = high byte for the EXc ounter, so if EX wants to be bigger than 31, overflow it into here.
-
-    ; Split bcde into S2, EX & RC.
-    ; To do this:
-    ; RC = e & %0111 1111               (i.e. a number 0..127)
-    ; Divide bcde by 128                (Shift right 7 bits, or shift left 1 bit then right 8)
-    ; EX = e & %0001 1111               (i.e. it has a max of 31)
-    ; Shift left 3 places
-    ; S2 = d
-
-    ; RC = e & %0111 1111
-    push hl
-    ld a, e
-    and %01111111                       ; RC is in A
-
-    sla e                               ; Shift all left by 1 bit
-    rl d
-    rl c
-    rl b
-
-    ld e, d                             ; Shift all right by 8 bits
-    ld d, c
-    ld c, b
-    ld b, 0                             ; We've effectively shifted right by 7 bits
-
-    ld bc, 15                           ; ex is as FCB+12, s2 is at FCB+14, rc is at FCB + 15
-    add hl, bc                          ; hl -> FCB.RC
-    ld (hl), a                          ; RC is now stored in FCB
-
-    dec hl                              
-    dec hl                              
-    dec hl                              ; hl -> FCB.EX
-    ld a, e
-    and %00011111                       ; EX is in A
-    ld (hl), a
-
-    sla e                               ; Shift all left by 1 bit
-    rl d
-    rl c
-    rl b
-    sla e                               ; Shift all left by 1 bit
-    rl d
-    rl c
-    rl b
-    sla e                               ; Shift all left by 1 bit
-    rl d
-    rl c
-    rl b
-
-    inc hl
-    inc hl                              ; hl -> FCB.S2
-
-    ld a, d
-    and %00011111                       ; S2 is in A
     ld (hl), a
 
     pop hl
@@ -1730,16 +1663,30 @@ disk_flash:
 ;
 dpblk:	
 ; Fake disk parameter block for all disks
-	defw	80		;sectors per track
+	; defw	80		;sectors per track
+	; defb	5		;block shift factor	(5 & 31 = 4K Block Size)
+	; defb	31		;block mask
+	; defb	3		;extent mask
+	; defw	196		;disk size 197 * 4k = 788k
+	; defw	127		;directory max
+	; defb	$80		;alloc 0	((DRM + 1) * 32) / 4096 = 1, so 80H
+	; defb	0		;alloc 1
+	; defw	0		;check size ( 0 = fixed disk )
+	; defw	0		;track offset ( 0 = no reserved system tracks )
+
+; These ones were copied from runCPM!
+	defw	64		;sectors per track
 	defb	5		;block shift factor	(5 & 31 = 4K Block Size)
-	defb	31		;block mask
-	defb	3		;extent mask
-	defw	196		;disk size 197 * 4k = 788k
-	defw	127		;directory max
-	defm	$80		;alloc 0	((DRM + 1) * 32) / 4096 = 1, so 80H
-	defm	0		;alloc 1
+	defb	$1F		;block mask
+	defb	1		;extent mask
+	defb	$FF		;disk size
+	defb	$07		;disk size
+	defb	$FF		;directory max
+	defb	$03		;directory max
+	defb	$FF		;alloc 0	((DRM + 1) * 32) / 4096 = 1, so 80H
+	defb	0		;alloc 1
 	defw	0		;check size ( 0 = fixed disk )
-	defw	0		;track offset ( 0 = no reserved system tracks )
+	defw	2		;track offset ( 0 = no reserved system tracks )
 
 DISKALLOC:
     db 0,0,0,0,0,0,0,0,0
