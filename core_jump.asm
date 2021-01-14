@@ -48,7 +48,7 @@ CORE_mount_disk equ CORE_START+114
 CORE_create_file equ CORE_START+117
 CORE_show_a_as_hex equ CORE_START+120
 CORE_convert_user_number_to_folder_name equ CORE_START+123
-
+CORE_set_file_size_in_fcb equ CORE_START+126
 
 filename_buffer equ 65535-20
 DRIVE_NAME equ filename_buffer-2

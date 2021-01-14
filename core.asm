@@ -115,7 +115,8 @@ CORE_show_a_as_hex:
     jp show_a_as_hex
 CORE_convert_user_number_to_folder_name:
     jp convert_user_number_to_folder_name
-
+CORE_set_file_size_in_fcb:
+    jp set_file_size_in_fcb
 
 include "uart.asm"
 include "message.asm"
