@@ -265,8 +265,8 @@ the_end:
 ; Unfortunately I am dumb and initially put them in ROM.
 ; I have learned my lesson!	
 
-store_hl		equ	60000					; Temporary store for hl
-store_de 		equ 60002					; Temporary store for de
+;store_hl		equ	60000					; Temporary store for hl
+;store_de 		equ 60002					; Temporary store for de
 current_page 	equ 60004					; Currently displayed monitor page
 
 test_buffer 	equ 60006					; 32 x 24 char buffer (768 bytes)
