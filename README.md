@@ -7,11 +7,15 @@ For videos about the Z80 Playground see https://youtube.com/playlist?list=PL3arA
 
 The main parts of this repo are:
 
-CORE.ASM
+CORE.ASM - The core routines for accessing the hardware.
 
-BIOS.ASM
+BIOS.ASM - A stub of a CP/M BIOS.
 
-BDOS.ASM
+BDOS.ASM - My implementation of the CP/M BDOS.
 
-CCP.ASM
+CCP.ASM - The standard Digital Research CCP.
+
+These are all assembled into .BIN files and put into the /CPM directory.
+
+Also, to get the system started, there is a boot loader called CPM.ASM. This should be put in the ROM.
 
