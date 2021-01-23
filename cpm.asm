@@ -59,7 +59,7 @@ skip_over_int_and_nmi:
 
     call message
    	db 27,'[2J',27,'[H'
-    db 'Z80 Playground Monitor & CP/M Loader v1.0',13,10,0
+    db 'Z80 Playground Monitor & CP/M Loader v1.01',13,10,0
 
     call message
     db 'Configure USB Drive...',13,10,0

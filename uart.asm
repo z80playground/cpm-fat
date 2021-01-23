@@ -50,7 +50,7 @@ configure_uart:
 
 	ld a, c
 	cp 0
-	jr nz, flowcontrol_done
+	jr z, flowcontrol_done
 
 	ld a, %00100010
 	out (uart_MCR), a				; Enable auto flow control for /RTS and /CTS
