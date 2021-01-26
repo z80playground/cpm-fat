@@ -61,6 +61,16 @@ skip_over_int_and_nmi:
    	db 27,'[2J',27,'[H'
     db 'Z80 Playground Monitor & CP/M Loader v1.01',13,10,0
 
+
+    ; Check MCR
+    ld a, %00100010
+    out (uart_MCR), a
+    call message
+    db '16C550: ',0
+    in a, (uart_MCR)
+    call show_a_as_hex
+    call newline
+
     call message
     db 'Configure USB Drive...',13,10,0
     call configure_memorystick
@@ -107,7 +117,7 @@ skip_over_int_and_nmi:
     call newline
     pop bc
 
-    call configure_uart                 ; Put these settings into the UART
+    ;call configure_uart                 ; Put these settings into the UART
     jp start_monitor
 
 failed_to_read_uart_config:
