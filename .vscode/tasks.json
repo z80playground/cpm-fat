@@ -213,10 +213,10 @@
             }
         },
         {
-            "label": "Program",
+            "label": "CHK16550",
             "type": "process",
             "command": "pasmo",
-            "args": ["--bin", "program.asm", "program.com"],
+            "args": ["--bin", "chk16550.asm", "chk16550.com"],
             "problemMatcher": [],
             "group": {
                 "kind": "build",
@@ -315,7 +315,7 @@
             "label": "copy_xr",
             "type": "shell",
             "command": "copy",
-            "args": ["C:\\Users\\john.squires\\Dropbox\\z80\\cpm\\xr.com", "f:\\cpm\\disks\\A\\xr.com"],
+            "args": ["C:\\z80 playground\\source\\cpm-fat\\chk16550.com", "d:\\cpm\\disks\\A\\chk16550.com"],
             "problemMatcher": [],
             "group": "test",
             "presentation": {
