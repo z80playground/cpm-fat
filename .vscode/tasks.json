@@ -267,7 +267,7 @@
             "label": "copy_to_memory_stickD",
             "type": "shell",
             "command": "copy",
-            "args": ["C:\\Users\\john.squires\\Dropbox\\z80\\cpm\\*.bin", "D:\\CPM\\"],
+            "args": ["C:\\z80 playground\\source\\cpm-fat\\*.bin", "D:\\CPM\\"],
             "problemMatcher": [],
             "group": "test",
             "presentation": {

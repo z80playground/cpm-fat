@@ -142,11 +142,9 @@ CONOUT:
     ret
 
 LIST:	
-    ld a, 'L'
-    jp BIOS_MOAN
+    jp CONOUT
 PUNCH:	
-    ld a, 'P'
-    jp BIOS_MOAN
+    jp CONOUT
 READER:	
     ld a, 'R'
     jp BIOS_MOAN
