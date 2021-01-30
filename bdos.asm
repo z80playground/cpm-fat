@@ -20,13 +20,13 @@ bdos_entry:
     jr c, BDOS_ok
 
     call CORE_message
-    db 'BAD BDOS ',0
+    db 'BAD BDOS CALL: ',0
     ld l, c
     ld h, 0
     call CORE_show_hl_as_hex
     call CORE_message
     db 13, 10, 0
-    ret
+    jp $0000                    ; Totally abandon anything after a bad BDOS call!
 
 BDOS_ok:
     push de
@@ -246,9 +246,11 @@ BDOS_Reset_Disk_System:
     call clear_current_fcb                          ; Clear out current FCB
     ld e, 0
     call BDOS_Select_Disk                           ; Choose disk A:
+    ld e, 0
+    call BDOS_Set_Get_User_Code                     ; Choose User 0
 
     ld hl, $0080
-    ld (dma_address), hl                            ; Set standard DMA locatin
+    ld (dma_address), hl                            ; Set standard DMA location
 	ret
 
 BDOS_Select_Disk:
@@ -310,9 +312,9 @@ BDOS_Open_File:
     ; return a = 0 for success, a = 255 for error.
     ; The FCB that was passed in gets copied into the Current_FCB so we know which file is open.
 
-    ; call show_bdos_message
-	; call CORE_message
-	; db 'Open_File',13,10,0
+    ;call show_bdos_message
+	;call CORE_message
+	;db 'Open_File',13,10,0
 
     ;push de
     ;ex de, hl
@@ -401,7 +403,7 @@ BDOS_Close_File:
     ; return 0 for success, 255 for fail
     ;call show_bdos_message
 	;call CORE_message
-	;db 'Cls File',13,10,0
+	;db 'Close',13,10,0
 
     call CORE_close_file
     call clear_current_fcb                          ; Clear out current FCB
@@ -452,9 +454,9 @@ BDOS_Search_for_Next:
 BDOS_Delete_File:
     ; Delete File passes in DE->FCB
     ; Returns a = 0 for success and a = 255 for failure
-    ; call show_bdos_message
-	; call CORE_message
-	; db 'Del_File',13,10,0
+     ;call show_bdos_message
+	 ;call CORE_message
+	 ;db 'Del_File',13,10,0
 
     ;call show_fcb
     call copy_fcb_to_filename_buffer
@@ -492,9 +494,9 @@ BDOS_Read_Sequential:
     ;call show_bdos_message
 	;call CORE_message
 	;db 'Read_Seq',13,10,0
+    ;call show_fcb    
 
     push de
-    ;call show_fcb    
     call disk_activity_start
 
     call compare_current_fcb
@@ -628,9 +630,9 @@ BDOS_Rename_File:
     ; Error a = 255
 
     push de                                         ; Store source FCB pointer for now
-    ; call show_bdos_message
-	; call CORE_message
-	; db 'Ren_File',13,10,0
+    ;call show_bdos_message
+	;call CORE_message
+	;db 'Ren_File',13,10,0
     call CORE_close_file                                 ; just in case there is an open one.
 
     ; call CORE_message
@@ -787,14 +789,10 @@ BDOS_Set_File_Attributes:
 	ret
 
 BDOS_Get_Addr_Disk_Parms:
-    ; call show_bdos_message
-	; call CORE_message
-	; db 'Get_Addr_Disk_Parms ',0
-    ; ld hl, dpblk
-    ; call CORE_show_hl_as_hex
-    ; call CORE_newline
+    ;call show_bdos_message
+	;call CORE_message
+	;db 'Get_Addr_Disk_Parms ',0
     ; Returns address in HL
-    ;ld hl, DISKPARAMS
     ld hl, dpblk
     ld a, l 
     ld b, h
@@ -1010,19 +1008,17 @@ BDOS_Reset_Drive:
 	ret
 
 BDOS_38:
-    call show_bdos_message
-	call CORE_message
-	db '38',13,10,0
+    ;call show_bdos_message
+	;call CORE_message
+	;db '38',13,10,0
     ld a, 1
-    ld b, 1
     ret
 
 BDOS_39:
-    call show_bdos_message
-	call CORE_message
-	db '39',13,10,0
+    ;call show_bdos_message
+	;call CORE_message
+	;db '39',13,10,0
     ld a, 1
-    ld b, 1
     ret
 
 BDOS_Write_Random_Zero_Fill:
@@ -1030,32 +1026,29 @@ BDOS_Write_Random_Zero_Fill:
 	;call CORE_message
 	;db 'Write_Rand_0',13,10,0
     jp BDOS_Write_Random1
-    ;ld a, 1
-    ;ld b, 1
-	;ret
 
 BDOS_41:
-    call show_bdos_message
-	call CORE_message
-	db '41',13,10,0
+    ;call show_bdos_message
+	;call CORE_message
+	;db '41',13,10,0
     ret
 
 BDOS_42:
-    call show_bdos_message
-	call CORE_message
-	db '42',13,10,0
+    ;call show_bdos_message
+	;call CORE_message
+	;db '42',13,10,0
     ret
 
 BDOS_43:
-    call show_bdos_message
-	call CORE_message
-	db '43',13,10,0
+    ;call show_bdos_message
+	;call CORE_message
+	;db '43',13,10,0
     ret
 
 BDOS_44:
-    call show_bdos_message
-	call CORE_message
-	db '44',13,10,0
+    ;call show_bdos_message
+	;call CORE_message
+	;db '44',13,10,0
     ret
 
 BDOS_ERROR_MODE:
@@ -1322,7 +1315,8 @@ clear_current_fcb:
     ld hl, current_fcb
     ld a, 0
     ld (hl), a
-    ld bc, 35
+    ;ld bc, 35
+    ld bc, 11
     ldir
     ret
 

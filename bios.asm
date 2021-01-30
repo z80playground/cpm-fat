@@ -178,10 +178,10 @@ SECTRAN:
 
 BIOS_MOAN:
     call CORE_message
-    db 'BIOS DIRECT: ',0
+    db 'BAD BIOS CALL: ',0
     call CORE_print_a
     call CORE_newline
-    ret
+    jp $0000                    ; Totally abandon anything after a bad BIOS call!
 
 NAME_OF_BDOS:
     db 'BDOS.BIN',0
