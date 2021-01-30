@@ -246,8 +246,6 @@ BDOS_Reset_Disk_System:
     call clear_current_fcb                          ; Clear out current FCB
     ld e, 0
     call BDOS_Select_Disk                           ; Choose disk A:
-    ld e, 0
-    call BDOS_Set_Get_User_Code                     ; Choose User 0
 
     ld hl, $0080
     ld (dma_address), hl                            ; Set standard DMA location

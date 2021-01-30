@@ -393,22 +393,23 @@ read_data_bytes_into_hl:
 wait_til_not_busy:
     ; call message
     ; db 'waiting...', 13, 10, 0
-    ld b, 200            ; retry max 200 times
+    ld bc, 2000            ; retry max 2000 times
 wait_til_not_busy1:
     push bc
     call read_command_byte
     and %00010000
     jp nz, wait_til_not_busy2
-    ; call message
-    ; db 'Finished waiting.', 13, 10, 0
     pop bc
     ret
 wait_til_not_busy2:
     call short_pause
     pop bc
-    djnz wait_til_not_busy1
+    dec bc
+    ld a, b
+    or c
+    jr nz, wait_til_not_busy1
     call message
-    db 'USB TIMEOUT', 13, 10, 0
+    db '[USB TIMEOUT]', 13, 10, 0
     ret
 
 read_status_byte:
