@@ -256,7 +256,7 @@ read_from_file1:
     jr read_from_file_cannot
 
 read_from_file3:
-    ld a, RD_USB_DATA0
+    ld a, RD_USB_DATA0                      ; Find out how many bytes are available to read
     call send_command_byte
     call read_data_byte                     ; A = number of bytes available to read
 
@@ -384,11 +384,9 @@ read_data_bytes_into_hl:
     ; On exit HL will point to the location after where the bytes were added.
     push af
     ld b, a
+    ld c, mem_stick_data_port
  read_data_bytes_into_buffer1:
-    in a, (mem_stick_data_port)
-    ld (hl),a
-    inc hl
-    djnz read_data_bytes_into_buffer1
+    inir                    ; A rare use of In, Increase & Repeat!!!
     pop af
     ret
     
