@@ -35,7 +35,7 @@ BOOT:
     db 27,'[0m'                  ; clear attributes
     db 'CP/M v2.2',13,10
     db 'Z80 Playground - 8bitStack.co.uk',13,10
-    db 'Rel 1.03',13,10
+    db 'Rel 1.04 (fast!)',13,10
     db 'Inspired by Digital Research',13,10
     db 13,10
     db '64K system with drives A thru P',13,10

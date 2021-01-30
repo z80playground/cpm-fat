@@ -130,9 +130,9 @@ monitor_init:
 monitor_init1:
     push bc    
 	call user_on
-	call short_pause
+	call medium_pause
 	call user_off
-	call short_pause
+	call medium_pause
     pop bc
     djnz monitor_init1
 
