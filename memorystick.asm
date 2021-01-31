@@ -135,10 +135,13 @@ matching_loop_good:
     ld bc, 11
     ld hl, disk_buffer
     ld de, (store_de)
-    ld a, (store_a)                 ; Fill in user number in FCB.
-    ld (de), a
+    ld a, (DRIVE_NAME)              ; Fill in drive letter in FCB
+    sub 'A'                         ; Convert A..P to 1..16
+    and %00001111
+    inc a
+    ld (de), a                      ; Store drive letter in FCB result
     inc de
-    ldir
+    ldir                            ; Copy filename & extension
 
     ; Fill in a few more details. File size into normal place, plus random record info.
     ; The filesize is a 32 bit number in FAT_DIR_INFO at loc $1C, 1D, 1E and 1F.
@@ -187,12 +190,6 @@ clear_allocation_loop:
     ld (de), a
     inc de
     djnz clear_allocation_loop    
-
-    ; Show what we are returning:
-    ;call message 
-    ;db 'Ret ',0
-    ;ld de, (dma_address)
-    ;ld b, 11
 good_length1:
     ld a, 0                                 ; 0 = success
     ret
