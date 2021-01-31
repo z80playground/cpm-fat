@@ -7,6 +7,8 @@ include "core_jump.asm"
 
     ; BDOS size is 2.5K
 
+DEBUG_BDOS equ 0
+
 bdos_entry:
     ; The function number is passed in Register C.
     ; The parameter is passed in DE.
@@ -14,8 +16,6 @@ bdos_entry:
     ; If function number is unknown we return A=0.
 
     ld a, c
-    ;cp 99
-    ;jp z, BDOS_Magic_Load
     cp 46
     jr c, BDOS_ok
 
@@ -239,9 +239,11 @@ BDOS_Return_Version_Number:
 	ret
 
 BDOS_Reset_Disk_System:
-    ;call show_bdos_message
-	;call CORE_message
-	;db 'Rst_Disks',13,10,0
+    if DEBUG_BDOS
+    call show_bdos_message
+	call CORE_message
+	db 'Rst_Disks',13,10,0
+    ENDIF
 
     call clear_current_fcb                          ; Clear out current FCB
     ld e, 0
@@ -252,9 +254,12 @@ BDOS_Reset_Disk_System:
 	ret
 
 BDOS_Select_Disk:
-    ;call show_bdos_message
-	;call CORE_message
-	;db 'Sel_Disk ',0
+    if DEBUG_BDOS
+    call show_bdos_message
+	call CORE_message
+	db 'Sel_Disk ',0
+    ENDIF
+
     ; Disk is in "E". 0 = A:, 15 = P:
     ld a, e
     and %00001111                                          ; Make sure it is in range 0..15
@@ -310,16 +315,12 @@ BDOS_Open_File:
     ; return a = 0 for success, a = 255 for error.
     ; The FCB that was passed in gets copied into the Current_FCB so we know which file is open.
 
-    ;call show_bdos_message
-	;call CORE_message
-	;db 'Open_File',13,10,0
-
-    ;push de
-    ;ex de, hl
-    ;call CORE_show_hl_as_hex
-    ;call newline
-    ;pop de
-    ;call show_fcb
+    if DEBUG_BDOS
+    call show_bdos_message
+	call CORE_message
+	db 'Open_File',13,10,0
+    call show_fcb
+    ENDIF
 
     ld a, 0
     call bdos_open_file_internal
@@ -399,9 +400,11 @@ open_cpm_disk_directory:
 BDOS_Close_File:
     ; Pass in de -> FCB
     ; return 0 for success, 255 for fail
-    ;call show_bdos_message
-	;call CORE_message
-	;db 'Close',13,10,0
+    IF DEBUG_BDOS
+    call show_bdos_message
+	call CORE_message
+	db 'Close',13,10,0
+    ENDIF
 
     call CORE_close_file
     call clear_current_fcb                          ; Clear out current FCB
@@ -422,10 +425,13 @@ BDOS_Search_for_First:
     ; - Open the correct folder, e.g. /CPM/DISKS/A/user
     ; - Read in a filename and put it into the DMA area.
     ; - Check if it matches. If not, try the next.
-    ;call show_bdos_message
-	;call CORE_message
-	;db 'Search_Fst',13,10,0
-    ;call show_fcb
+
+    IF DEBUG_BDOS
+    call show_bdos_message
+	call CORE_message
+	db 'Search_Fst',13,10,0
+    call show_fcb
+    ENDIF
 
     call copy_fcb_to_filename_buffer_preserving_spaces
 
@@ -433,49 +439,102 @@ BDOS_Search_for_First:
     ld a, (current_user)
     call CORE_dir                            ; returns 0 = success, 255 = fail
 
+    IF DEBUG_BDOS
+    cp 255
+    jr nz, report_on_dir
+    call CORE_message
+    db 'DIR returned NONE',13,10,0
+    ret
+report_on_dir:
+    push af
+    call CORE_message
+    db 'DIR returned:',13,10,0
+    ld de, (dma_address)
+    call show_fcb
+    pop af
+    ENDIF
+
 	ret
 
 BDOS_Search_for_Next:
-    ; call show_bdos_message
-	; call CORE_message
-	; db 'Search_Nxt',13,10,0
+    IF DEBUG_BDOS
+    call show_bdos_message
+	call CORE_message
+	db 'Search_Nxt',13,10,0
+    ENDIF
 
     ; TODO: What's all this hl business?
-    ld hl, (dma_address)
-    push hl
+    ;ld hl, (dma_address)
+    ;push hl
     ld de, (dma_address)
     ld a, (current_user)
     call CORE_dir_next                            ; returns 0 = success, 255 = fail
-    pop hl
+    ;pop hl
+
+
+    IF DEBUG_BDOS
+    push af
+    call CORE_message
+    db 'DIR NEXT returned:',13,10,0
+    ld de, (dma_address)
+    call show_fcb
+    pop af
+    ENDIF
+
 	ret
 
 BDOS_Delete_File:
     ; Delete File passes in DE->FCB
     ; Returns a = 0 for success and a = 255 for failure
-     ;call show_bdos_message
-	 ;call CORE_message
-	 ;db 'Del_File',13,10,0
+    IF DEBUG_BDOS
+    call show_bdos_message
+	call CORE_message
+	db 'Del_File',13,10,0
+    call show_fcb
+    ENDIF
 
-    ;call show_fcb
+    ; We enter with DE pointing to a FCB, such as "file.xyz" or "*.txt".
+    ; We use this to run a DIR-search-first, returning a result in A (0=good) and 
+    ; storing its resulting FCB in a temporary FCB.
+    ; If no file was found then we are done.
+    ; If a file was found then we need to delete that file, and loop back to the start. 
+
+    ; Do a DIR-search-first, using the fcb passed in DE
+    push de
+    call clear_current_fcb                          ; Clear out current FCB
+    pop de
+
+ BDOS_Delete_File_loop:
+    push de
+
+    call copy_fcb_to_filename_buffer_preserving_spaces
+    ld de, temp_fcb
+    ld a, (current_user)
+    call CORE_dir                            ; returns 0 = success, 255 = fail
+    cp 255
+    jr z, BDOS_Delete_File_done
+
+    ; File found, so delete it
+    ld de, temp_fcb
     call copy_fcb_to_filename_buffer
-    ;call show_filename_buffer
-    
-    call CORE_close_file                                 ; just in case there is an open one.
-
+    call CORE_close_file                            ; just in case there is an open one.
     call open_cpm_disk_directory
 
     ld hl, filename_buffer+2                        ; Specify filename
     call CORE_open_file
     jr nz, delete_error                             ; Don't delete if not found
-
     call CORE_erase_file
 
-    call clear_current_fcb                          ; Clear out current FCB
+    pop de                                  ; Get original FCB back
+    jr BDOS_Delete_File_loop
 
+BDOS_Delete_File_done:
+    pop de
     ld a, 0
 	ret
 
 delete_error:
+    pop de
     ld a, 255
     ret
 
@@ -489,10 +548,12 @@ BDOS_Read_Sequential:
     ; If not, close the current file and open the new one, jumping to the right place.
     ; If so just proceed.
     ; Then increase the pointer in the FCB and copy it to Current_FCB.
-    ;call show_bdos_message
-	;call CORE_message
-	;db 'Read_Seq',13,10,0
-    ;call show_fcb    
+    IF DEBUG_BDOS
+    call show_bdos_message
+	call CORE_message
+	db 'Read_Seq',13,10,0
+    call show_fcb    
+    ENDIF
 
     push de
     call disk_activity_start
@@ -540,9 +601,12 @@ BDOS_Write_Sequential:
     ; If not, close the current file and open the new one, jumping to the right place.
     ; If so just proceed.
     ; Then increase the pointer in the FCB and copy it to Current_FCB.
-    ;call show_bdos_message
-	;call CORE_message
-	;db 'Write_Sequential',13,10,0
+    IF DEBUG_BDOS
+    call show_bdos_message
+	call CORE_message
+	db 'Write_Sequential',13,10,0
+    ENDIF
+
     push de
     call disk_activity_start
 dont_turn_on:    
@@ -582,16 +646,19 @@ BDOS_Write_Sequential_fail:
 BDOS_Make_File:
     ; Make File passes in DE->FCB
     ; Returns a = 0 for success and a = 255 for failure
-    ;call show_bdos_message
-	;call CORE_message
-	;db 'Mk_File',13,10,0
+    IF DEBUG_BDOS
+    call show_bdos_message
+	call CORE_message
+	db 'Mk_File',13,10,0
+    call show_fcb
+    ENDIF
+
     push de
 
     call CORE_close_file                                 ; just in case another file is open
 
     pop de
     push de
-    ;call show_fcb
     call copy_fcb_to_filename_buffer
 
     call CORE_disk_on
@@ -627,10 +694,13 @@ BDOS_Rename_File:
     ; Success a = 0
     ; Error a = 255
 
+    IF DEBUG_BDOS
+    call show_bdos_message
+	call CORE_message
+	db 'Ren_File',13,10,0
+    ENDIF
+
     push de                                         ; Store source FCB pointer for now
-    ;call show_bdos_message
-	;call CORE_message
-	;db 'Ren_File',13,10,0
     call CORE_close_file                                 ; just in case there is an open one.
 
     ; call CORE_message
@@ -809,8 +879,8 @@ BDOS_Set_Get_User_Code:
     jr z, get_user_code
 set_user_code:
     ld a, e
-    and %00001111   ; Make sure it is 0-15
-    ld (current_user), a  ; Store new value
+    and %00001111           ; Make sure it is 0-15
+    ld (current_user), a    ; Store new value
     ld a, (current_disk)
     ld e, a
     call BDOS_Select_Disk   ; Change to the appropriate folder
@@ -820,9 +890,11 @@ get_user_code:
 	ret
 
 BDOS_Read_Random:
-    ;call show_bdos_message
-	;call CORE_message
-	;db 'Read_Rand',13,10,0
+    IF DEBUG_BDOS
+    call show_bdos_message
+	call CORE_message
+	db 'Read_Rand',13,10,0
+    ENDIF
 BDOS_Read_Random1:    
     push de                                         ; store FCB for now
     call disk_activity_start
@@ -865,9 +937,11 @@ BDOS_Read_Random_fail:
     ret
 
 BDOS_Write_Random:
-    ;call show_bdos_message
-	;call CORE_message
-	;db 'Write_Rand',13,10,0
+    IF DEBUG_BDOS
+    call show_bdos_message
+	call CORE_message
+	db 'Write_Rand',13,10,0
+    ENDIF
 BDOS_Write_Random1:    
     push de                                         ; store FCB for now
     call disk_activity_start
@@ -916,9 +990,12 @@ convert_random_pointer_to_normal_pointer:
     ret
 
 BDOS_Compute_File_Size:
-    ;call show_bdos_message
-	;call CORE_message
-	;db 'Compute_File_Sz',13,10,0
+    IF DEBUG_BDOS
+    call show_bdos_message
+	call CORE_message
+	db 'Compute_File_Sz',13,10,0
+    ENDIF
+
     ; DE -> FCB
     ; Sets the random-record count bytes part of the FCB to the number of 128-byte records in the file. 
     ; Return A=0 FOR SUCCESS, or 255 if error.
@@ -983,9 +1060,11 @@ BDOS_Compute_File_Size_not_exist:
     ret
 
 BDOS_Set_Random_Record:
-    ;call show_bdos_message
-	;call CORE_message
-	;db 'Set_Rand_Rec',13,10,0
+    IF DEBUG_BDOS
+    call show_bdos_message
+	call CORE_message
+	db 'Set_Rand_Rec',13,10,0
+    ENDIF
 
     ; Set the random record count bytes of the FCB to the number of the last record read/written by the sequential I/O calls.
     ; FCB is in DE
@@ -998,9 +1077,12 @@ BDOS_Set_Random_Record:
 	ret
 
 BDOS_Reset_Drive:
-    ;call show_bdos_message
-	;call CORE_message
-	;db 'Rst_Drv',13,10,0
+    IF DEBUG_BDOS
+    call show_bdos_message
+	call CORE_message
+	db 'Rst_Drv',13,10,0
+    ENDIF
+
     call clear_current_fcb                          ; Clear out current FCB
     ld a, 0
 	ret
@@ -1020,9 +1102,12 @@ BDOS_39:
     ret
 
 BDOS_Write_Random_Zero_Fill:
-    ;call show_bdos_message
-	;call CORE_message
-	;db 'Write_Rand_0',13,10,0
+    IF DEBUG_BDOS
+    call show_bdos_message
+	call CORE_message
+	db 'Write_Rand_0',13,10,0
+    ENDIF
+
     jp BDOS_Write_Random1
 
 BDOS_41:
@@ -1313,7 +1398,6 @@ clear_current_fcb:
     ld hl, current_fcb
     ld a, 0
     ld (hl), a
-    ;ld bc, 35
     ld bc, 11
     ldir
     ret
@@ -1715,6 +1799,9 @@ current_disk:
     db 0
 current_user:
     db 0
+
+temp_fcb:
+    ds 36
 
 ; TODO these should only live in the CORE.
 YES_OPEN_DIR equ $41
