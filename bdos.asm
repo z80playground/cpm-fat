@@ -711,12 +711,14 @@ BDOS_Rename_File:
 
     ; call CORE_message
     ; db 'Target file:',13,10,0
+
     pop de
     push de
     ld hl, 16
     add hl, de
     push hl                                         ; And store the target FCB for now
     ex de, hl
+
     ;call show_fcb
 
     ; Try opening target file. If we can then return an error.
@@ -728,15 +730,18 @@ BDOS_Rename_File:
     call CORE_open_file
     jr z, BDOS_Rename_File_exists
 
-    ; Check if both drives are the same. If not return error.
+    ; Check if both drives are the same (or the target one is DEFAULT). If not return error.
     pop hl                                          ; retrieve pointer to target file
-    ld b, (hl)                                      ; Target file drive letter
-    pop de
+    ld a, (hl)                                      ; Target file drive letter
+    cp 0
+    jr z, BDOS_Rename_File_same_drives              ; If target is default, all is good
+    pop hl
     push de
-    ld a, (de)                                      ; Source file drive letter
+    ld b, (hl)                                      ; Source file drive letter
     cp b                                            ; Are drive letters the same?
     jr nz, BDOS_Rename_File_different_drives
 
+BDOS_Rename_File_same_drives:
     ; Open the original file.
     pop de
     push hl                                         ; Store target FCB location
