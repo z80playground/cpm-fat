@@ -393,7 +393,7 @@ read_data_bytes_into_hl:
 wait_til_not_busy:
     ; call message
     ; db 'waiting...', 13, 10, 0
-    ld bc, 2000            ; retry max 2000 times
+    ld bc, 60000            ; retry max 60000 times!!!
 wait_til_not_busy1:
     push bc
     call read_command_byte

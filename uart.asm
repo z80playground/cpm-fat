@@ -116,7 +116,7 @@ medium_pause:
 	ld bc,45000
     jr pause0
 short_pause:
-	ld bc,500
+	ld bc,100
 pause0:
 	dec bc
 	ld a,b
