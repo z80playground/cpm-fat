@@ -35,7 +35,7 @@ BOOT:
     db 27,'[0m'                  ; clear attributes
     db 'CP/M v2.2',13,10
     db 'Z80 Playground - 8bitStack.co.uk',13,10
-    db 'Rel 1.06b',13,10
+    db 'Rel 1.06c',13,10
     db 'Inspired by Digital Research',13,10
     db 13,10
     db '64K system with drives A thru P',13,10
@@ -122,8 +122,6 @@ CONST1:
 	ret
 
 CONIN:	
-    ;ld a, 'I'
-    ;call BIOS_MOAN
     ; CONSOLE CHARACTER INTO REGISTER A
 	in a,(uart_LSR)			; get status from Line Status Register
 	bit 0,a					; zero flag set to true if bit 0 is 0 (bit 0 = Receive Data Ready)
@@ -133,10 +131,6 @@ CONIN:
     ret
 
 CONOUT:	
-    ;push bc
-    ;ld a, 'O'
-    ;call BIOS_MOAN
-    ;pop bc
     ld a, c
     call CORE_print_a
     ret

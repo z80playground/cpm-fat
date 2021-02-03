@@ -46,7 +46,7 @@ BDOS_ok:
 
     ; Now return. So anything that wants to return a value in HL should do ld a,l ld b,h first
     ld l, a                     ; This is how the
-    ld h,b                      ; BDOS does return values.
+    ld h, b                     ; BDOS does return values.
     ret
 
 call_hl:
@@ -61,9 +61,11 @@ show_bdos_message:
     ret
 
 BDOS_System_Reset:
-    ;call show_bdos_message
-	;call CORE_message
-	;db 'reset',13,10,0
+    IF DEBUG_BDOS
+    call show_bdos_message
+	call CORE_message
+	db 'reset',13,10,0
+    ENDIF
 
     ;;;;; Turn off the ROM
     call CORE_rom_off
@@ -81,9 +83,6 @@ BDOS_System_Reset:
     ld ($005D), a
     ld ($006D), a                                   ; Clear the two command arguments too
     
-    ;ld a, 0
-    ;ld (UDFLAG), a                                  ; Set drive A:, user 0
-
     call clear_current_fcb                          ; Clear the Current_fcb
 
     ld a, 0
@@ -443,12 +442,12 @@ BDOS_Search_for_First:
     cp 255
     jr nz, report_on_dir
     call CORE_message
-    db 'DIR returned NONE',13,10,0
+    db 'DIR NONE',13,10,0
     ret
 report_on_dir:
     push af
     call CORE_message
-    db 'DIR returned:',13,10,0
+    db 'DIR ret:',13,10,0
     ld de, (dma_address)
     call show_fcb
     pop af
@@ -463,23 +462,18 @@ BDOS_Search_for_Next:
 	db 'Search_Nxt',13,10,0
     ENDIF
 
-    ; TODO: What's all this hl business?
-    ;ld hl, (dma_address)
-    ;push hl
     ld de, (dma_address)
     ld a, (current_user)
     call CORE_dir_next                            ; returns 0 = success, 255 = fail
-    ;pop hl
 
-
-    IF DEBUG_BDOS
-    push af
-    call CORE_message
-    db 'DIR NEXT returned:',13,10,0
-    ld de, (dma_address)
-    call show_fcb
-    pop af
-    ENDIF
+    ;IF DEBUG_BDOS
+    ;push af
+    ;call CORE_message
+    ;db 'DIR NEXT returned:',13,10,0
+    ;ld de, (dma_address)
+    ;call show_fcb
+    ;pop af
+    ;ENDIF
 
 	ret
 
@@ -703,14 +697,14 @@ BDOS_Rename_File:
     push de                                         ; Store source FCB pointer for now
     call CORE_close_file                                 ; just in case there is an open one.
 
-    ; call CORE_message
-    ; db 'Source file:',13,10,0
-    ; pop de
-    ; push de
-    ; call show_fcb
+    ;call CORE_message
+    ;db 'Source file:',13,10,0
+    ;pop de
+    ;push de
+    ;call show_fcb
 
-    ; call CORE_message
-    ; db 'Target file:',13,10,0
+    ;call CORE_message
+    ;db 'Target file:',13,10,0
 
     pop de
     push de
@@ -768,26 +762,26 @@ BDOS_Rename_File_same_drives:
     call CORE_close_file
 
     call clear_current_fcb                          ; Clear out current FCB
-    ld a, 255
+    ld a, 0                                         ; 0 = success
 	ret
 BDOS_Rename_File_exists:
     pop de                                          ; Drain the stack
     pop de
-    call CORE_message
-    db 'Target file already exists!',13,10,0
+    ;call CORE_message
+    ;db 'Target file already exists!',13,10,0
     ld a, 255
     ret
 BDOS_Rename_File_different_drives:
     pop de                                          ; Drain the stack
-    call CORE_message
-    db 'Source and Target files must be on same drive!',13,10,0
+    ;call CORE_message
+    ;db 'Source and Target files must be on same drive!',13,10,0
     ld a, 255
     ret
 
 BDOS_Rename_File_no_source:
     pop de                                          ; Drain the stack
-    call CORE_message
-    db 'Can''t find source file!',13,10,0
+    ;call CORE_message
+    ;db 'Can''t find source file!',13,10,0
     ld a, 255
     ret
 
@@ -818,20 +812,25 @@ BDOS_Set_DMA_Address:
     ; Pass in de -> DMA Address
     ld (dma_address), de
 
-    ;call show_bdos_message
-	;call CORE_message
-	;db 'Set_DMA = ',0
-    ;ex de, hl
-    ;call CORE_show_hl_as_hex
-    ;call newline
+    IF DEBUG_BDOS
+    call show_bdos_message
+	call CORE_message
+	db 'Set_DMA ',0
+    ex de, hl
+    call CORE_show_hl_as_hex
+    call CORE_newline
+    ENDIF
 
     ld a, 0
 	ret
 
 BDOS_Get_Addr_Alloc:
-    ;call show_bdos_message
-	;call CORE_message
-	;db 'Get_Addr_Alloc',13,10,0
+    IF DEBUG_BDOS
+    call show_bdos_message
+	call CORE_message
+	db 'Get_DSKALLOC',13,10,0
+    ENDIF
+
     ld hl, DISKALLOC
     ld a, l 
     ld b, h
@@ -842,7 +841,6 @@ BDOS_Write_Protect_Disk:
 	;call CORE_message
 	;db 'Wr_Prot_Disk',13,10,0
     ld a, 1
-    ;ld b, 1
 	ret
 
 BDOS_Get_RO_Vector:
@@ -850,7 +848,6 @@ BDOS_Get_RO_Vector:
 	;call CORE_message
 	;db 'Get_RO_Vect',13,10,0
     ld a, 1
-    ;ld b, 1
 	ret
 
 BDOS_Set_File_Attributes:
@@ -858,13 +855,15 @@ BDOS_Set_File_Attributes:
 	;call CORE_message
 	;db 'Set_File_Attr',13,10,0
     ld a, 1
-    ;ld b, 1
 	ret
 
 BDOS_Get_Addr_Disk_Parms:
-    ;call show_bdos_message
-	;call CORE_message
-	;db 'Get_Addr_Disk_Parms ',0
+    IF DEBUG_BDOS
+    call show_bdos_message
+	call CORE_message
+	db 'Get_DPB ',0
+    ENDIF
+
     ; Returns address in HL
     ld hl, dpblk
     ld a, l 
@@ -898,7 +897,8 @@ BDOS_Read_Random:
     IF DEBUG_BDOS
     call show_bdos_message
 	call CORE_message
-	db 'Read_Rand',13,10,0
+	db 'Rd_Rnd',13,10,0
+    call show_fcb
     ENDIF
 BDOS_Read_Random1:    
     push de                                         ; store FCB for now
@@ -912,34 +912,28 @@ BDOS_Read_Random1:
     pop de                                          ; de -> FCB
     push de
     ; Need to close any existing open file and open the new one.
-    ld a, 1                                     ; Open new file but don't update file pointer
+    ld a, 1                                         ; Open new file but don't update file pointer
     call bdos_open_file_internal
     pop de
     ; Now jump to the right place in the file
-    call get_file_pointer_from_fcb              ; bcde = file pointer
-    call multiply_bcde_by_128                   ; bcde = byte location in file
-    call CORE_move_to_file_pointer                   ; move to that location
+    call get_file_pointer_from_fcb                  ; bcde = file pointer
+    call multiply_bcde_by_128                       ; bcde = byte location in file
+    call CORE_move_to_file_pointer                  ; move to that location
     ld de, (dma_address)
     call CORE_read_from_file
-    jr nz, BDOS_Read_Random2                    ; If fail to read, return error code
+    jr nz, BDOS_Read_Random2                        ; If fail to read, return error code
     call CORE_close_file                             
     call clear_current_fcb
     call CORE_disk_off
-    ld a, 0                                     ; Return success code
+    ld a, 0                                         ; Return success code
 	ret
 BDOS_Read_Random2:
     call CORE_close_file                             
     call clear_current_fcb
     call CORE_disk_off
-    ld a, 1                                     ; Return error code
+    ld a, 1                                         ; Return error code
 	ret
 
-BDOS_Read_Random_fail:
-    call CORE_close_file                             
-    call clear_current_fcb
-    call CORE_disk_off
-    ld a, 1                 ; TODO: Shouldn't this be 255???
-    ret
 
 BDOS_Write_Random:
     IF DEBUG_BDOS
@@ -1008,11 +1002,13 @@ BDOS_Compute_File_Size:
     push de                                         ; Store source FCB pointer for now
     call CORE_close_file                                 ; just in case there is an open one.
 
+    IF DEBUG_BDOS
     call CORE_message
     db 'Compute File Size Source file:',13,10,0
     pop de
     push de
     call show_fcb
+    ENDIF
 
     call copy_fcb_to_filename_buffer
 
@@ -1051,7 +1047,7 @@ BDOS_Compute_File_Size:
     ; Store in FCB
     pop de                                          ; Get the FCB back
     call CORE_set_random_pointer_in_fcb             ; store hl in FCB random pointer (bc is thrown away!)
-    call show_fcb
+    ;call show_fcb
 
     ; Close the file.
     call CORE_close_file
