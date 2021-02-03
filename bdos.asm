@@ -786,8 +786,8 @@ BDOS_Rename_File_different_drives:
 
 BDOS_Rename_File_no_source:
     pop de                                          ; Drain the stack
-    call CORE_message
-    db 'Can''t find source file!',13,10,0
+    ;call CORE_message
+    ;db 'Can''t find source file!',13,10,0
     ld a, 255
     ret
 
