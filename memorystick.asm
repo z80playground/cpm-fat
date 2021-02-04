@@ -15,22 +15,6 @@ dir:
     ld (store_a), a
 
     call disk_on
-    call connect_to_usb_drive
-    jr z, can_do_dir
-
-    call message
-    db 'ERROR: Cannot read USB Disk.',13,10,0
-    call disk_off
-    ret
-
-can_do_dir:
-    ; at this point DE is on stack, containing address of dma-area
-    call connect_to_disk
-    call mount_disk
-
-    ;call message
-    ;db 'USB DIR for ', 0
-    ;call show_filename_buffer
 
     ld hl, CPM_FOLDER_NAME                    ; Start at /CPM
     call open_file
