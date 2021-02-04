@@ -17,5 +17,5 @@ CCP.ASM - The standard Digital Research CCP.
 
 These are all assembled into .BIN files and put into the /CPM directory.
 
-Also, to get the system started, there is a boot loader called CPM.ASM. This should be put in the ROM.
+Also, to get the system started, there is a boot loader called CPM.ASM. This should be assembled to CPM.HEX and put in the EEPROM.
 
