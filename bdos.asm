@@ -16,8 +16,11 @@ bdos_entry:
     ; If function number is unknown we return A=0.
 
     ld a, c
-    cp 46
+    cp 49
     jr c, BDOS_ok
+
+    cp $66                      ; 102 = BDOS_Get_Date_Time
+    jr z, return_255_in_a
 
     call CORE_message
     db 'BAD BDOS CALL: ',0
@@ -1111,27 +1114,9 @@ BDOS_Write_Random_Zero_Fill:
     jp BDOS_Write_Random1
 
 BDOS_41:
-    ;call show_bdos_message
-	;call CORE_message
-	;db '41',13,10,0
-    ret
-
 BDOS_42:
-    ;call show_bdos_message
-	;call CORE_message
-	;db '42',13,10,0
-    ret
-
 BDOS_43:
-    ;call show_bdos_message
-	;call CORE_message
-	;db '43',13,10,0
-    ret
-
 BDOS_44:
-    ;call show_bdos_message
-	;call CORE_message
-	;db '44',13,10,0
     ret
 
 BDOS_ERROR_MODE:
@@ -1140,6 +1125,11 @@ BDOS_ERROR_MODE:
 	call CORE_message
 	db 'Err_Mod',13,10,0
     ENDIF
+    ret
+
+BDOS_46:
+BDOS_47:
+BDOS_48:
     ret
 
 ;-------------------------------------------------
@@ -1718,6 +1708,9 @@ dw BDOS_42
 dw BDOS_43
 dw BDOS_44
 dw BDOS_ERROR_MODE                  ; eq 45       2D
+dw BDOS_46
+dw BDOS_47
+dw BDOS_48
 
 filesize_buffer:
     ds 6
