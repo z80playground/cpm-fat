@@ -119,11 +119,18 @@ matching_loop_good:
     ld bc, 11
     ld hl, disk_buffer
     ld de, (store_de)
-    ld a, (DRIVE_NAME)              ; Fill in drive letter in FCB
-    sub 'A'                         ; Convert A..P to 1..16
+
+    ; WHAT? The Usernumber goes into the first byte of the FCB???
+    ld a, (store_a)
     and %00001111
-    inc a
     ld (de), a                      ; Store drive letter in FCB result
+
+    ; ld a, (DRIVE_NAME)              ; Fill in drive letter in FCB
+    ; sub 'A'                         ; Convert A..P to 1..16
+    ; and %00001111
+    ; inc a
+    ; ld (de), a                      ; Store drive letter in FCB result
+
     inc de
     ldir                            ; Copy filename & extension
 

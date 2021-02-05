@@ -435,25 +435,25 @@ BDOS_Search_for_First:
     ld de, (dma_address)
     ld a, (current_user)
     call CORE_dir                            ; returns 0 = success, 255 = fail
+    cp 0
+    jr z, search_first_found
 
     IF DEBUG_BDOS
-    cp 255
-    jr nz, report_on_dir
     call CORE_message
     db 'DIR NONE',13,10,0
-    ld b, 0
-    ret
-report_on_dir:
-    push af
+    ENDIF
+
+    jp return_255_in_a                          ; Found nothing
+
+search_first_found:
+    IF DEBUG_BDOS
     call CORE_message
     db 'DIR ret:',13,10,0
     ld de, (dma_address)
     call show_fcb
-    pop af
     ENDIF
 
-    ld b, 0
-	ret
+    jp return_0_in_a                            ; Success!
 
 BDOS_Search_for_Next:
     IF DEBUG_BDOS
@@ -465,18 +465,25 @@ BDOS_Search_for_Next:
     ld de, (dma_address)
     ld a, (current_user)
     call CORE_dir_next                            ; returns 0 = success, 255 = fail
+    cp 0
+    jr z, search_next_found
 
-    ;IF DEBUG_BDOS
-    ;push af
-    ;call CORE_message
-    ;db 'DIR NEXT returned:',13,10,0
-    ;ld de, (dma_address)
-    ;call show_fcb
-    ;pop af
-    ;ENDIF
+    IF DEBUG_BDOS
+    call CORE_message
+    db 'NEXT NONE',13,10,0
+    ENDIF
 
-    ld b, 0
-	ret
+    jp return_255_in_a                          ; Found nothing
+
+search_next_found:
+    IF DEBUG_BDOS
+    call CORE_message
+    db 'NEXT ret:',13,10,0
+    ld de, (dma_address)
+    call show_fcb
+    ENDIF
+
+    jp return_0_in_a                            ; Success!
 
 BDOS_Delete_File:
     ; Delete File passes in DE->FCB

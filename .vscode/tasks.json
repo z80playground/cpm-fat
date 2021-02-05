@@ -299,7 +299,8 @@
             "label": "copy_sd",
             "type": "shell",
             "command": "copy",
-            "args": ["C:\\Users\\john.squires\\Dropbox\\z80\\cpm\\sd.com", "f:\\cpm\\disks\\A\\sd.com"],
+            "args": ["C:\\z80 playground\\source\\cpm-fat\\sd.com", "d:\\cpm\\disks\\A\\sd.com"],
+            //"args": ["C:\\z80 playground\\source\\cpm-fat\\sd.com", "c:\\runcpm\\runcpm\\debug\\A\\0\\sd.com"],
             "problemMatcher": [],
             "group": "test",
             "presentation": {
