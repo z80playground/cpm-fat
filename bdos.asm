@@ -251,13 +251,23 @@ BDOS_Select_Disk:
     ENDIF
 
     ; Disk is in "E". 0 = A:, 15 = P:
+    ld a, (current_disk)                                    ; Are we already on the desired disk?
+    ld b, a
     ld a, e
-    and %00001111                                          ; Make sure it is in range 0..15
-    ld (current_disk), a                                  ; Store disk
+    and %00001111                                           ; Make sure desired disk is in range 0..15
+    cp b                                                    ; If current and desired are the same
+    jp z, return_0_in_a                                     ; ignore this call.
+
+    ld (current_disk), a                                    ; Store disk
 
     ; Now check that directory actually exists, and if not, make it
     add a, 'A'
     push af
+
+    if DEBUG_BDOS
+    call CORE_print_a
+    call CORE_newline
+    ENDIF
 
     ld hl, CPM_FOLDER_NAME                ; Start at /CPM
     call CORE_open_file
@@ -298,7 +308,7 @@ BDOS_Select_Disk_ok:
 
 BDOS_Select_Disk_User_ok:    
     call clear_current_fcb                          ; Clear out current FCB
-	ret
+	jp return_0_in_a
 
 BDOS_Open_File:
     ; Pass in de -> FCB
@@ -605,6 +615,7 @@ BDOS_Write_Sequential:
     call show_bdos_message
 	call CORE_message
 	db 'Write_Sequential',13,10,0
+    call show_fcb
     ENDIF
 
     push de
