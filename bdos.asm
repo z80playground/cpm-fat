@@ -70,23 +70,9 @@ BDOS_System_Reset:
 	db 'reset',13,10,0
     ENDIF
 
-    ;;;;; Turn off the ROM
-    call CORE_rom_off
-
-    ld hl, $0080
-    ld (dma_address), hl                            ; Set standard DMA location
-    ld (hl), 0
-    ld d, h
-    ld e, l
-    inc de
-    ld bc, 127
-    ldir                                            ; Clear DMA area (as if CCP had a command started with no arguments)
-
-    ld a, ' '
-    ld ($005D), a
-    ld ($006D), a                                   ; Clear the two command arguments too
-    
     call clear_current_fcb                          ; Clear the Current_fcb
+    jp $0000
+
 return_0_in_a:
     xor a                                           ; a = 0
     ld b, a
