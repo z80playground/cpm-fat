@@ -79,11 +79,11 @@ return_0_in_a:
     ret
 return_1_in_a:
     ld a, 1
-    ld b, a
+    ld b, 0
     ret
 return_255_in_a:
     ld a, 255
-    ld b, a
+    ld b, 0
     ret
 
 BDOS_Console_Input:
