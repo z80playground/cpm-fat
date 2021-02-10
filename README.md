@@ -12,7 +12,7 @@ The main parts of this repo are:
 * BDOS.ASM - My implementation of the CP/M BDOS.
 * CCP.ASM - The standard Digital Research CCP.
 
-These are all assembled into .BIN files and put into the /CPM directory.
+These should all be assembled into .BIN files and put into the /CPM directory or your USB Drive. The assembler I use is Pasmo.
 
 Also, to get the system started, there is a boot loader called CPM.ASM. This should be assembled to CPM.HEX and put in the EEPROM.
 
