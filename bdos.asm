@@ -706,51 +706,55 @@ BDOS_Rename_File:
 	db 'Ren_File',13,10,0
     ENDIF
 
-    push de                                         ; Store source FCB pointer for now
-    call CORE_close_file                                 ; just in case there is an open one.
-
-    ;call CORE_message
-    ;db 'Source file:',13,10,0
-    ;pop de
-    ;push de
-    ;call show_fcb
-
-    ;call CORE_message
-    ;db 'Target file:',13,10,0
-
+    ld (store_source), de                               ; Store source FCB pointer for now
+    push de                                         
+    call CORE_close_file                                ; just in case there is an open one.
     pop de
-    push de
+
+    ; show source FCB
+    ; call CORE_message
+    ; db 'Source file:',13,10,0
+    ; call show_fcb
+
+    ; call CORE_message
+    ; db 'Target file:',13,10,0
+
     ld hl, 16
     add hl, de
-    push hl                                         ; And store the target FCB for now
-    ex de, hl
+    ld (store_target), hl                               ; And store the target FCB for now
+    ex de, hl                                           ; target is now in de
 
+    ; Show target FCB
     ;call show_fcb
 
+    ; Check if target drive is "default", if so, copy from source.
+    ld hl, (store_target)                           ; retrieve pointer to target file
+    ld a, (hl)                                      ; Target file drive letter
+    cp 0                                            ; Is the target of the default drive?
+    jr nz, BDOS_Rename_target_not_default           ; This indicates it should be the same as the source
+    ld de, (store_source)
+    ld a, (de)
+    ld (hl), a                                      ; Copy drive from source to target
+
+BDOS_Rename_target_not_default:
+    ; Check if both drives are the same. If not return error.
+    ld hl, (store_target)
+    ld a, (hl)                                      ; Get target drive
+    ld hl, (store_source)                           ; retrieve source fcb
+    cp (hl)                                         ; Are drive letters the same?
+    jr nz, BDOS_Rename_File_different_drives
+
     ; Try opening target file. If we can then return an error.
+    ld de, (store_target)
     call copy_fcb_to_filename_buffer
-
     call open_cpm_disk_directory
-
     ld hl, filename_buffer+2                        ; Specify filename
     call CORE_open_file
     jr z, BDOS_Rename_File_exists
 
-    ; Check if both drives are the same (or the target one is DEFAULT). If not return error.
-    pop hl                                          ; retrieve pointer to target file
-    ld a, (hl)                                      ; Target file drive letter
-    cp 0
-    jr z, BDOS_Rename_File_same_drives              ; If target is default, all is good
-    pop hl
-    push de
-    ld b, (hl)                                      ; Source file drive letter
-    cp b                                            ; Are drive letters the same?
-    jr nz, BDOS_Rename_File_different_drives
-
 BDOS_Rename_File_same_drives:
-    ; Open the original file.
-    pop de
-    push hl                                         ; Store target FCB location
+    ; Open the source file.
+    ld de, (store_source)
     call copy_fcb_to_filename_buffer
     ld hl, filename_buffer+2                        ; Specify source filename
     call CORE_open_file
@@ -760,8 +764,8 @@ BDOS_Rename_File_same_drives:
     call CORE_dir_info_read    
     jr nz, BDOS_Rename_File_no_source
 
-    ; Update the name.
-    pop hl
+    ; Update the name of the target file by copying the name from target to source
+    ld hl, (store_target)
     inc hl
     ld de, disk_buffer
     ld bc, 11
@@ -774,23 +778,21 @@ BDOS_Rename_File_same_drives:
     call CORE_close_file
 
     call clear_current_fcb                          ; Clear out current FCB
+    ;call CORE_message
+    ;db '[YAY!]',13,10,0
     jp return_0_in_a                                ; success
 BDOS_Rename_File_exists:
-    pop de                                          ; Drain the stack
-    pop de
     ;call CORE_message
-    ;db 'Target file already exists!',13,10,0
+    ;db '[EXISTS]',13,10,0
     jp return_255_in_a
 BDOS_Rename_File_different_drives:
-    pop de                                          ; Drain the stack
     ;call CORE_message
-    ;db 'Source and Target files must be on same drive!',13,10,0
+    ;db '[DIFF]',13,10,0
     jp return_255_in_a
 
 BDOS_Rename_File_no_source:
-    pop de                                          ; Drain the stack
     ;call CORE_message
-    ;db 'Can''t find source file!',13,10,0
+    ;db '[NONE]',13,10,0
     jp return_255_in_a
 
 BDOS_Return_Login_Vector:
@@ -1797,6 +1799,12 @@ temp_fcb:
 
 delete_flag:
     db 0
+
+store_source:
+    dw 0
+
+store_target:
+    dw 0
 
 ; TODO these should only live in the CORE.
 YES_OPEN_DIR equ $41
