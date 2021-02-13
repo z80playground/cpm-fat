@@ -90,11 +90,17 @@ not6:
 
 not_hash:
 	cp 'c'					; CP/M
-	jr nz, unknown_char
-
+	jr nz, not_c
     call message 
     db 'Starting CP/M... Make sure you have the "ROM Select" jumper set to "switched".',13,10,0
     jp start_cpm
+
+not_c:
+	cp 't'					; Tiny Basic
+	jr nz, unknown_char
+    call check_tbasic_structure
+    jp TBSTART
+	jp monitor_loop
 
 unknown_char:
 	call print_a			; If we don't understand it, show it!
@@ -109,8 +115,9 @@ show_welcome_message:
 	db 27,'[42m','|',27,'[40m','  Z80 Playground  ',27,'[42m','|',13,10
 	db 27,'[42m','|',27,'[40m','                  ',27,'[42m','|',13,10
 	db 27,'[42m','+------------------+',27,'[40m',13,10,13,10
-	db 'Monitor v1.04 December 2020',13,10,13,10
-	db 'c = Boot CP/M', 13, 10
+	db 'Monitor v1.05 February 2021',13,10,13,10
+	db 'c = CP/M', 13, 10
+	db 't = Tiny Basic',13,10
 	db 'm = Memory Map', 13, 10
 	db '0 = Show Page 0 of Memory', 13, 10
 	db 'h = Move to Higher Page', 13, 10
@@ -119,7 +126,7 @@ show_welcome_message:
 	db '3 = ROM ON', 13, 10
 	db '4 = ROM OFF', 13, 10
 	db 'd = Disk LED toggle', 13, 10
-	db '# = Execute HALT instruction.',13,10
+	db '# = Execute HALT instruction',13,10
 	db '/ = Show this Menu',13,10
 	db 13,10,0
 	ret

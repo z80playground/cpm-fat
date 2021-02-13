@@ -442,6 +442,24 @@ control_char:
     ld a, c
     jr show_filename_buffer2
 
+check_tbasic_structure:
+    ; Check that there is a /TBASIC folder
+    ; and if not, make it!
+    call message
+    db 'Checking /TBASIC',13,10,0
+
+    ld hl, TINY_BASIC_FOLDER_NAME
+    call copy_filename_to_buffer
+    ld hl, filename_buffer
+    call open_file
+    cp YES_OPEN_DIR                     ; This is NOT an error, it is a badly named success code!!!!!!
+    ret z                               ; If found, job done.
+    call create_directory
+    ret z                               ; If created ok, job done.
+    call message
+    db 'ERROR creating Tiny Basic folder!',13,10,0
+    ret
+
 check_cpmdisks_structure:
     ; Check that we have a disk structure like this:
     ; /CPMDISKS
@@ -658,6 +676,10 @@ STAR_DOT_STAR:
 
 CPM_FOLDER_NAME:
     db '/CPM',0
+
+ TINY_BASIC_FOLDER_NAME:
+         db '/TBASIC',0
+
 CPM_DISKS_NAME:
     db 'DISKS',0
 

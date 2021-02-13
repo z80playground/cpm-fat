@@ -743,11 +743,6 @@ must_not_be_zero:
     halt
 
 
-include "uart.asm"
-include "message.asm"
-include "memorystick.asm"
-include "filesize.asm"
-include "monitor.asm"
 
 NAME_OF_BDOS:
     db '/BDOS.BIN',0
@@ -796,3 +791,11 @@ ccp_name equ ccp_location-13            ; stores the name of the ccp file, e.g. 
 
 baud_rate_divisor equ ccp_name-1
 flow_control_value equ baud_rate_divisor-1
+
+include "uart.asm"
+include "message.asm"
+include "memorystick.asm"
+include "filesize.asm"
+include "monitor.asm"
+
+include "tiny-basic.asm"
