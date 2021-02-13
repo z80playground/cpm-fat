@@ -97,10 +97,16 @@ not_hash:
 
 not_c:
 	cp 't'					; Tiny Basic
-	jr nz, unknown_char
+	jr nz, not_t
     call check_tbasic_structure
-    jp TBSTART
-	jp monitor_loop
+    call TBSTART
+	jp monitor_start
+
+not_t:
+	cp 'g'					; Game-of-Life
+	jr nz, unknown_char
+    call GOFL_Begin
+	jp monitor_start
 
 unknown_char:
 	call print_a			; If we don't understand it, show it!
@@ -118,6 +124,7 @@ show_welcome_message:
 	db 'Monitor v1.05 February 2021',13,10,13,10
 	db 'c = CP/M', 13, 10
 	db 't = Tiny Basic',13,10
+	db 'g = Game-of-Life',13,10
 	db 'm = Memory Map', 13, 10
 	db '0 = Show Page 0 of Memory', 13, 10
 	db 'h = Move to Higher Page', 13, 10
