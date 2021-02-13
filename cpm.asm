@@ -799,3 +799,4 @@ include "filesize.asm"
 include "monitor.asm"
 
 include "tiny-basic.asm"
+include "GOFL.asm"
