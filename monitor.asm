@@ -139,16 +139,19 @@ show_welcome_message:
 	ret
 
 monitor_init:
-    ; Three flashes on the USER (blue) LED
-    ld b, 3
+    ; Four flashes on the USER (blue) LED and disk (yellow) LED
+    ld b, 4
 monitor_init1:
     push bc    
-	call user_on
-	call medium_pause
 	call user_off
+	call disk_on
+	call medium_pause
+	call user_on
+	call disk_off
 	call medium_pause
     pop bc
     djnz monitor_init1
+	call user_off
 
     call ram_fill
 
@@ -157,10 +160,10 @@ monitor_init1:
     ret
 
 ram_fill:
-    ; Copy the first 8k of ROM down to ram
+    ; Copy the first 16k of ROM down to ram
 	ld hl,0
 	ld de,0
-	ld bc, 8192
+	ld bc, 1024*16
 	ldir
     ret
 
@@ -241,10 +244,12 @@ ram_loop:
 	db 'Interrupt Enable  9    Command Port     17',13,10
 	db 'Interrup Status  10',13,10
 	db 'Line Control     11',13,10
-	db 'Modem Control    12',13,10
-	db 'Line Status      13',13,10
-	db 'Modem Status     14',13,10
-	db 'Scratch          15',13,10
+	db 'Modem Control    12 <---- 76543210',13,10
+	db 'Line Status      13      Bit 0 = User LED',13,10
+	db 'Modem Status     14      Bit 2 = Disk LED',13,10
+	db 'Scratch          15      Bit 3 = ROM Enable',13,10
+	db 13,10
+	db 'The EEPROM is an ATMEL AT28C256',13,10
 	db 13,10,0
 	ret
 
