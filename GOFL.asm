@@ -1,5 +1,6 @@
+; Conway's Game Of Life for the Z80 Playground.
 ; This was written by Albert Pauw in February 2021, originally for CP/M,
-; and adapted for the Z80 playground Monitor by john Squires
+; and adapted for the Z80 playground Monitor by john Squires.
 
 ; After boiling it down A LOT, it turns out that Game-Of-Life is very simple:
 ; Arrange a large grid of cells, where each can be either alive = 1 or dead = 0.
@@ -8,11 +9,13 @@
 ; 0XXXXXXXX0
 ; 0XXXXXXXX0
 ; 0000000000 Where 0 = dead cell, and X = active area which can be 0s or 1s.
+;
 ; Iterate over all the cells in the active area. For each:
 ; Make a note of whether the cell is alive or dead.
+; Start counting neighbours for the cell, starting at 0.
 ; Add to this value the alive/dead value of all 8 neighbouring cells around it.
 ; Store the neighbour count in the top 4 bits, and the alive/dead state of the cell
-; in bit 0. You will then end up with each cell having a binary value something like this:
+; in bit 0. You will then end up with each cell having a binary value something like these examples:
 ; 0010 0001 - This is 2 neighbours and the cell is currently alive.
 ; 0011 0000 - This is a dead cell with 3 neighbours.
 ; 1000 0001 - This is an alive cell with 8 neighbours.
@@ -27,7 +30,7 @@
 ; If the cell contains one of these 3 values, set the cell to 1.
 ; Otherwise set it to 0.
 ;
-; Then show them all on screen, and start again!
+; Then show all cells on screen, and start again!
 
 Width:   EQU 80
 Height:  EQU 25
@@ -41,71 +44,35 @@ GOFL_Begin:
         call show_intro_screen
         call long_pause
         call wait_for_key
+        ld a, b
+        cp 200
+        jp nc, copy_pattern3
+        cp 100
+        jp nc, copy_pattern2
+copy_pattern1:
+        ld hl, initial_pattern1
+        call copy_initial_pattern
+        jr GOFL_Begin1
+copy_pattern2:
+        ld hl, initial_pattern2
+        call copy_initial_pattern
+        jr GOFL_Begin1
+copy_pattern3:
+        ld hl, initial_pattern3
+        call copy_initial_pattern
+        jr GOFL_Begin1
+GOFL_Begin1:
         CALL GOFL_HCursor   ; Hide cursor
         CALL GOFL_Cls       ; Clear screen
-        call copy_initial_pattern
-        call GOFL_Print
 
-again:
-        call iterate
-        call apply_rules
-        call GOFL_Print
-        
-        CALL char_in        ; Check for keypress
-        AND A               ;
-        Jp Z,again          ; Loop around again if no key
-        ret
-
-apply_rules:
+main_gofl_loop:
+        ; First, iterate over the cells, counting the neighbours
         ld c, Height
-        ld h, BufferPage+1
-apply_rules_outer:
-        ld l, 1                 ; Start at 1,1
-        ld b, Width
-apply_rules_loop:
-        ; 0010 0001 - Alive cell with 2 neighbours stays alive.
-        ; 0011 0001 - Alive cell with 3 neighbours stays alive.
-        ; 0011 0000 - Dead cell with 3 neighbours comes to life.
-
-        ld a, (hl)              ; Get the content into a
-        cp %00100001
-        jr z, cell_alive
-        cp %00110001
-        jr z, cell_alive
-        cp %00110000
-        jr z, cell_alive
-        ld (hl), 0              ; Cell dies
-        jp apply_rules_continue
-cell_alive:
-        ld (hl), 1              ; Cell lives
-apply_rules_continue:        
-        inc l
-        djnz apply_rules_loop
-        inc h
-        ld l, 1
-        dec c
-        jr nz, apply_rules_outer
-        ret
-
-iterate:
-        ld c, Height
-        ld h, BufferPage+1
+        ld h, BufferPage+1              ; h = y coord, l = x coord
 iterate_outer:
-        ld l, 1                 ; Start at 1,1
+        ld l, 1                         ; Start at coord 1,1
         ld b, Width
 iterate_loop:
-        call CountNeighbours
-        inc l
-        djnz iterate_loop
-        inc h
-        ld l, 1
-        dec c
-        jr nz, iterate_outer
-        ret
-
-CountNeighbours:
-        ; Pass in cell to process in HL
-        ; It modifies this cell!
         ld a, (hl)                      ; Get original cell content
         and %00000001
         ld d, a                         ; Store in d
@@ -128,7 +95,7 @@ CountNeighbours:
         add a, (hl)
         dec l                           ; South-West neighbour
         add a, (hl)
-        inc l                           ; Get back to cell
+        inc l                           ; Get back to center cell
         dec h
 
         sla a                           ; rotate left
@@ -137,20 +104,59 @@ CountNeighbours:
         sla a                           ; rotate left
         or d                            ; Put back the original cell content
         ld (hl), a                      ; Store final result
-        ret
 
+        inc l
+        djnz iterate_loop
+        inc h
+        ld l, 1
+        dec c
+        jr nz, iterate_outer
+
+
+        ; Now iterate over the cells again, applying the rules
+apply_rules:
+        ld c, Height
+        ld h, BufferPage+1
+apply_rules_outer:
+        ld l, 1                         ; Start at 1,1
+        ld b, Width
+apply_rules_loop:
+        ; 0010 0001 - Alive cell with 2 neighbours stays alive.
+        ; 0011 0001 - Alive cell with 3 neighbours stays alive.
+        ; 0011 0000 - Dead cell with 3 neighbours comes to life.
+
+        ld a, (hl)                      ; Get the content into a
+        cp %00100001
+        jr z, cell_alive
+        cp %00110001
+        jr z, cell_alive
+        cp %00110000
+        jr z, cell_alive
+        ld (hl), 0                      ; Cell dies
+        jp apply_rules_continue
+cell_alive:
+        ld (hl), 1                      ; Cell lives
+apply_rules_continue:        
+        inc l
+        djnz apply_rules_loop
+        inc h
+        ld l, 1
+        dec c
+        jr nz, apply_rules_outer
+
+
+        ; Now print the cells to the screen
 GOFL_Print:  
-        ; Prints the buffer to the screen, for diagnostic purposes.
         call GOFL_Home
         ld h, BufferPage+1
-        ld l, 1
-        LD c, Height    ; Set size
+        ld l, 1                         ; Start at 1,1
+        LD c, Height                    ; Set size for loops, height...
 Pr0:
-        ld b, Width
+        ld b, Width                     ; ...and width
 Pr1:    
-        LD A,(HL)               ; Get cell value in buffer
-        and 1                   ; Is it ODD?
-        jp z, print_empty_cell  ; If not, it is an empty cell
+        LD A,(HL)                       ; Get cell value in buffer
+        and 1                           ; Is it ODD?
+        jp z, print_empty_cell          ; If not, it is an empty cell
         ld d, HASH
         jp print_got_character
 print_empty_cell:
@@ -162,20 +168,31 @@ print_got_character:
         ld a, d
         out (uart_tx_rx), a             ; AND SEND IT OUT
         
-        INC L           ; Next character in buffer
-        djnz Pr1        ; Count down and loop
+        INC L                           ; Next character in buffer
+        djnz Pr1                        ; Count down and loop
 
-        dec c           ; decrease row counter
+        dec c                           ; decrease row counter
         jp z, skip_newline_on_last_row
         call newline
 skip_newline_on_last_row:
-        ld l, 1         ; Back to start of row
-        inc h           ; Move down a row
+        ld l, 1                         ; Back to start of row
+        inc h                           ; Move down a row
         ld a, c
         cp 0
-        jp nz, Pr0      ; Loop over rows
-        RET             ; Done
+        jp nz, Pr0                      ; Loop over rows
 
+
+        ; Now check for key press to end        
+        CALL char_in                    ; Check for keypress
+        AND A                           ;
+        Jp Z,main_gofl_loop             ; Loop around again if no key
+        ret
+
+
+
+
+
+        ; Helper routines
 GOFL_Home:   
         call message
         DB ESC,'[H',0
@@ -198,7 +215,7 @@ GOFL_SCursor:
         DB ESC,'[?25h',0
         ret
 
-initial_pattern: 
+initial_pattern1: 
         DB '................................................................................'
         DB '................................................................................'
         DB '................................................................................'
@@ -225,32 +242,59 @@ initial_pattern:
         DB '................................................................................'
         DB '................................................................................'
 
-; initial_pattern: 
-;         DB '................................................................................'
-;         DB '..##............................................................................'
-;         DB '.........................#......................................................'
-;         DB '.......................#.#......................................................'
-;         DB '.............##......##............##...........................................'
-;         DB '............#...#....##............##...........................................'
-;         DB '.##........#.....#...##.........................................................'
-;         DB '.##........#...#.##....#.#......................................................'
-;         DB '...........#.....#.......#......................................................'
-;         DB '............#...#...............................................................'
-;         DB '.............##.................................................................'
-;         DB '................................................................................'
-;         DB '................................................................................'
-;         DB '................................................................................'
-;         DB '................................................................................'
-;         DB '................................................................................'
-;         DB '................................................................................'
-;         DB '................................................................................'
-;         DB '................................................................................'
-;         DB '................................................................................'
-;         DB '................................................................................'
-;         DB '................................................................................'
-;         DB '................................................................................'
-;         DB '................................................................................'
-;         DB '................................................................................'
+initial_pattern2: 
+        DB '................................................................................'
+        DB '..##............................................................................'
+        DB '.........................#......................................................'
+        DB '.......................#.#......................................................'
+        DB '.............##......##............##...........................................'
+        DB '............#...#....##............##...........................................'
+        DB '.##........#.....#...##.........................................................'
+        DB '.##........#...#.##....#.#......................................................'
+        DB '...........#.....#.......#......................................................'
+        DB '............#...#...............................................................'
+        DB '.............##.................................................................'
+        DB '................................................................................'
+        DB '................................................................................'
+        DB '................................................................................'
+        DB '................................................................................'
+        DB '................................................................................'
+        DB '................................................................................'
+        DB '................................................................................'
+        DB '................................................................................'
+        DB '................................................................................'
+        DB '................................................................................'
+        DB '................................................................................'
+        DB '................................................................................'
+        DB '................................................................................'
+        DB '................................................................................'
+
+initial_pattern3: 
+        DB '................................................................................'
+        DB '................................................................................'
+        DB '....................................................................##..........'
+        DB '....................................................................##..........'
+        DB '................................................................................'
+        DB '.....................#..#.......................................................'
+        DB '.........................#.......................####...........................'
+        DB '.....................#...#......................................................'
+        DB '......................####.........................####.........................'
+        DB '................................................................................'
+        DB '....#...........................................................................'
+        DB '.....#..........................................................................'
+        DB '...###..........................................................................'
+        DB '...................................................................#..#.........'
+        DB '..................................................................#.............'
+        DB '..................................................................#...#.........'
+        DB '...........................................###....................####..........'
+        DB '..........................................###...................................'
+        DB '................................................................................'
+        DB '................................................................................'
+        DB '................................................................................'
+        DB '................................................................................'
+        DB '................................................................................'
+        DB '................##..............................................................'
+        DB '................##..............................................................'
 
 show_intro_screen:
     call GOFL_Cls
@@ -263,17 +307,23 @@ show_intro_screen:
     ret
 
 wait_for_key:
-    call char_in
-    cp 0
-    jp z, wait_for_key
-    ret
+        ; Waits for a key, and generates a random number in b, which it returns!
+        ld b, 0
+wait_for_key1:
+        inc b
+        call char_in
+        cp 0
+        jp z, wait_for_key1
+        ret
 
 copy_initial_pattern:
     ; Copy the starting pattern into the buffer.
+    ; The pointer to the pattern is passed in HL.
     ; The pattern is made of "." and "#" but we store it in the buffer as
     ; 1s and 0s. We do this by ANDing the char with %00000001, which is
     ; why the '#' char needs to be ODD and the '.' char needs to be EVEN.
     
+    push hl
     ; But first, totally zero out the entire buffer
     ld hl, Buffer
     ld (hl), 0
@@ -282,10 +332,11 @@ copy_initial_pattern:
     ld c, 0
     ldir
 
+    pop hl
+
     ; Now copy the pattern to the buffer
     ld d, BufferPage+1                  ; Initialise at location 1,1
     ld e, 1                             ; in the buffer (top left is 0,0)
-    ld hl, initial_pattern
     ld c, Height
 copy_initial_pattern_rows:
     ld b, Width
