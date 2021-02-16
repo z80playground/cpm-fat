@@ -1,207 +1,198 @@
+; Conway's Game Of Life for the Z80 Playground.
 ; This was written by Albert Pauw in February 2021, originally for CP/M,
-; and adapted for the Z80 playground Monitor by john Squires
+; and adapted for the Z80 playground Monitor by john Squires.
+
+; After boiling it down A LOT, it turns out that Game-Of-Life is very simple:
+; Arrange a large grid of cells, where each can be either alive = 1 or dead = 0.
+; Make sure there is an empty row all around the grid with a dead cell in it, like this:
+; 0000000000
+; 0XXXXXXXX0
+; 0XXXXXXXX0
+; 0000000000 Where 0 = dead cell, and X = active area which can be 0s or 1s.
+;
+; Iterate over all the cells in the active area. For each:
+; Make a note of whether the cell is alive or dead.
+; Start counting neighbours for the cell, starting at 0.
+; Add to this value the alive/dead value of all 8 neighbouring cells around it.
+; Store the neighbour count in the top 4 bits, and the alive/dead state of the cell
+; in bit 0. You will then end up with each cell having a binary value something like these examples:
+; 0010 0001 - This is 2 neighbours and the cell is currently alive.
+; 0011 0000 - This is a dead cell with 3 neighbours.
+; 1000 0001 - This is an alive cell with 8 neighbours.
+;
+; Now, it turns out that all possible combinations result in the death of a cell, or
+; a dead cell staying dead, except these three:
+; 0010 0001 - Alive cell with 2 neighbours stays alive.
+; 0011 0001 - Alive cell with 3 neighbours stays alive.
+; 0011 0000 - Dead cell with 3 neighbours comes to life.
+;
+; So all we need to do is iterate over the cells again.
+; If the cell contains one of these 3 values, set the cell to 1.
+; Otherwise set it to 0.
+;
+; Then show all cells on screen, and start again!
 
 Width:   EQU 80
 Height:  EQU 25
+PatternWidth: equ 80
 Size:    EQU Width*Height
-DOT:     EQU '.'
-HASH:    EQU '#'
+DOT:     EQU '.' ; ASCII 46, so EVEN. This is important later!
+HASH:    EQU '#' ; ASCII 25, so ODD. This is important later!
 ESC:     EQU 27
 
 GOFL_Begin:   
         call show_intro_screen
         call long_pause
         call wait_for_key
+        ld a, b
+        cp 200
+        jp nc, copy_pattern3
+        cp 100
+        jp nc, copy_pattern2
+copy_pattern1:
+        ld hl, initial_pattern1
+        call copy_initial_pattern
+        jr GOFL_Begin1
+copy_pattern2:
+        ld hl, initial_pattern2
+        call copy_initial_pattern
+        jr GOFL_Begin1
+copy_pattern3:
+        ld hl, initial_pattern3
+        call copy_initial_pattern
+        jr GOFL_Begin1
+GOFL_Begin1:
         CALL GOFL_HCursor   ; Hide cursor
         CALL GOFL_Cls       ; Clear screen
-        call copy_initial_pattern
-GOFL_Start:  
-        ld hl, Buffer1
-        CALL GOFL_Print     ; Show screen
-        LD BC,0             ; Start at (0,0)
-        LD HL,Buffer1       ;
-        LD DE,Buffer2       ;
-        call GOFL_Loop
 
-        ld hl, Buffer2
-        CALL GOFL_Print     ; Show screen
-        LD BC,0             ; Start at (0,0)
-        LD HL,Buffer2       ;
-        LD DE,Buffer1       ;
-        call GOFL_Loop
+main_gofl_loop:
+        ; First, iterate over the cells, counting the neighbours
+        ld c, Height
+        ld h, BufferPage+1              ; h = y coord, l = x coord
+iterate_outer:
+        ld l, 1                         ; Start at coord 1,1
+        ld b, Width
+iterate_loop:
+        ld a, (hl)                      ; Get original cell content
+        and %00000001
+        ld d, a                         ; Store in d
 
-        CALL char_in        ; Check for keypress
-        AND A               ;
-        Jp Z,GOFL_Start     ; Loop around again if no key
+        xor a                           ; Clear a
 
-        CALL GOFL_SCursor   ; Show cursor again
-        CALL GOFL_Cls       ; Clear screen
-        RET                 ; Done
+        dec l                           ; West neighbour
+        add a, (hl)
+        dec h                           ; North-West neighbour
+        add a, (hl)
+        inc l                           ; North neighbour
+        add a, (hl)
+        inc l                           ; North-East neighbour
+        add a, (hl)
+        inc h                           ; East neighbour
+        add a, (hl)
+        inc h                           ; South-East neighbour
+        add a, (hl)
+        dec l                           ; South neighbour
+        add a, (hl)
+        dec l                           ; South-West neighbour
+        add a, (hl)
+        inc l                           ; Get back to center cell
+        dec h
 
-GOFL_Loop:    
-        LD A,(HL)           ; Get cell state
-        CP HASH             ; Alive?
-        jp NZ,GOFL_Dead     ; No, -> dead
-        CALL GOFL_GetNB     ; Get nr of neighbours
-        CP 2                ;
-        jp Z,GOFL_Live      ;
-        CP 3                ;
-        jp Z,GOFL_Live      ;
-        jp GOFL_Die         ;
-GOFL_Dead:   
-        CALL GOFL_GetNB     ;
-        CP 3                ;
-        jp Z,GOFL_Live      ;
-GOFL_Die:    
-        LD A,DOT            ; <2 Store as dead cell
-        jp GOFL_Next        ;
-GOFL_Live:    
-        LD A,HASH           ;
-GOFL_Next:    
-        LD (DE),A           ; Store it in temporary buffer
-        INC DE              ; 
-        INC HL              ; Next cell
-        INC B               ; Loop through width
-        LD A,B              ;
-        CP Width            ; And of line reached?
-        jp NZ,GOFL_Loop     ; No, next
-        LD B,0              ; Go to start of line
-        INC C               ; Next line
-        LD A,C              ;
-        CP Height           ; Last line reached? 
-        jp NZ,GOFL_Loop     ; No, next line
+        sla a                           ; rotate left
+        sla a                           ; rotate left
+        sla a                           ; rotate left
+        sla a                           ; rotate left
+        or d                            ; Put back the original cell content
+        ld (hl), a                      ; Store final result
+
+        inc l
+        djnz iterate_loop
+        inc h
+        ld l, 1
+        dec c
+        jr nz, iterate_outer
+
+
+        ; Now iterate over the cells again, applying the rules
+apply_rules:
+        ld c, Height
+        ld h, BufferPage+1
+apply_rules_outer:
+        ld l, 1                         ; Start at 1,1
+        ld b, Width
+apply_rules_loop:
+        ; 0010 0001 - Alive cell with 2 neighbours stays alive.
+        ; 0011 0001 - Alive cell with 3 neighbours stays alive.
+        ; 0011 0000 - Dead cell with 3 neighbours comes to life.
+
+        ld a, (hl)                      ; Get the content into a
+        cp %00100001
+        jr z, cell_alive
+        cp %00110001
+        jr z, cell_alive
+        cp %00110000
+        jr z, cell_alive
+        ld (hl), 0                      ; Cell dies
+        jp apply_rules_continue
+cell_alive:
+        ld (hl), 1                      ; Cell lives
+apply_rules_continue:        
+        inc l
+        djnz apply_rules_loop
+        inc h
+        ld l, 1
+        dec c
+        jr nz, apply_rules_outer
+
+
+        ; Now print the cells to the screen
+GOFL_Print:  
+        call GOFL_Home
+        ld h, BufferPage+1
+        ld l, 1                         ; Start at 1,1
+        LD c, Height                    ; Set size for loops, height...
+Pr0:
+        ld b, Width                     ; ...and width
+Pr1:    
+        LD A,(HL)                       ; Get cell value in buffer
+        and 1                           ; Is it ODD?
+        jp z, print_empty_cell          ; If not, it is an empty cell
+        ld d, HASH
+        jp print_got_character
+print_empty_cell:
+        ld d, DOT        
+print_got_character:
+        in a,(uart_LSR)                 ; check UART is ready to send.
+        bit 5,a                         ; zero flag set to true if bit 5 is 0
+        jp z, print_got_character       ; non-zero = ready for next char.
+        ld a, d
+        out (uart_tx_rx), a             ; AND SEND IT OUT
+        
+        INC L                           ; Next character in buffer
+        djnz Pr1                        ; Count down and loop
+
+        dec c                           ; decrease row counter
+        jp z, skip_newline_on_last_row
+        call newline
+skip_newline_on_last_row:
+        ld l, 1                         ; Back to start of row
+        inc h                           ; Move down a row
+        ld a, c
+        cp 0
+        jp nz, Pr0                      ; Loop over rows
+
+
+        ; Now check for key press to end        
+        CALL char_in                    ; Check for keypress
+        AND A                           ;
+        Jp Z,main_gofl_loop             ; Loop around again if no key
         ret
 
 
-GOFL_GetNB:   
-        PUSH HL        ; Save HL (B=X, C=Y coordinate)
-        PUSH DE        ; save de too
-	    LD D,HASH      ; D=HASH
-        LD E,0         ; E=0 (neighbour count)
-        LD A,B         ; Check if we're on the left margin
-        AND A          ;
-        jp Z,Lbl1      ; Yes, Skip left location
-        DEC HL         ; Go to left
-        LD A,(HL)      ; Get value
-        CP D           ; Occupied?
-        jp NZ,Lbl0     ; No, no count
-        INC E          ; Yes, add 1
-Lbl0:    
-        INC HL         ; Back to standard location
-Lbl1:    
-        LD A,B         ; Check if we're on the right margin
-        CP Width-1     ; 0-79 when width is 80
-        jp Z,Lbl3      ; Yes, skip right location
-        INC HL         ; Go to right
-        LD A,(HL)      ; Get value
-        CP D           ; Occupied?
-        jp NZ,lbl2     ; No, no count
-        INC E          ; Yes, add 1
-lbl2:    
-        DEC HL         ; Back to original location
-Lbl3:    
-        LD A,C         ; Check if we're at the top
-        AND A          ; 
-        jp Z,Lbl8      ; Yes, skip top three locations
-        PUSH DE        ; Save count
-        LD DE,Width    ; 
-        AND A          ; Clear carry
-        SBC HL,DE      ; Go to previous line
-        POP DE         ; Restore count
-        LD A,(HL)      ; Get value
-        CP D           ; Occupied?
-        jp NZ,Lbl4     ; No, no count
-        INC E          ; Yes, add 1
-Lbl4:    
-        LD A,B         ; Check if we're on the left margin
-        AND A          ;
-        jp Z,Lbl6      ; Yes, skip left location
-        DEC HL         ; Go to left
-        LD A,(HL)      ; Get value
-        CP D           ; Occupied?
-        jp NZ,Lbl5     ; No, No count
-        INC E          ; Yes, count
-Lbl5:    
-        INC HL         ; Go to middle top
-Lbl6:    
-        LD A,B         ; Check if we're on the right margin
-        CP Width-1     ;
-        jp Z,Lbl8      ; Yes, skip right location
-        INC HL         ; Go to right
-        LD A,(HL)      ; Get value
-        CP D           ; Occupied?
-        jp NZ,Lbl7     ; No, no count
-        INC E          ; Yes, add 1
-Lbl7:    
-        DEC HL         ; Back to middle
-Lbl8:    
-        LD A,C         ;
-        CP Height-1    ; Check if we're at the bottom
-        jp Z,Lbl13     ;
-        PUSH DE        ; Save counter
-        LD DE,Width    ;
-        ADD HL,DE      ; Go two lines down
-        ADD HL,DE      ;
-        POP DE         ; Restore counter
-        LD A,(HL)      ; Get value
-        CP D           ; Occupied?
-        jp NZ,Lbl9     ; No, no count
-        INC E          ; Yes, add 1
-Lbl9:    
-        LD A,B         ; Check if we're on the left margin
-        AND A          ;
-        jp Z,Lbl12     ; Yes, skip left location
-        DEC HL         ; Go to left
-        LD A,(HL)      ; Get value
-        CP D           ; Occupied?
-        jp NZ,Lbl10    ; No, No count
-        INC E          ; Yes, count
-Lbl10:   
-        INC HL         ; Go to middle bottom
-Lbl12:  
-        LD A,B         ; Check if we're on the right margin
-        CP Width-1     ;
-        jp Z,Lbl13     ; Yes, skip right location
-        INC HL         ; Go to right
-        LD A,(HL)      ; Get value
-        CP D           ; Occupied?
-        jp NZ,Lbl13    ; No, no count
-        INC E          ; Yes, add 1
-Lbl13:   
-        LD A,E         ; Get counter
-        pop de
-        POP HL         ; Back to start location
-        RET            ;
 
-GOFL_Print:  
-        ; Pass in the pointer to the buffer to print, in HL
-        call GOFL_Home
-        LD c, Height-1    ; Set size
-Pr0:
-        ld b, Width
-Pr1:    
-        LD A,(HL)       ; Get character in buffer
-        call print_a
-        INC HL          ; Next character in buffer
-        djnz Pr1        ; Count down and loop
-        ld a, 13
-        call print_a
-        ld a, 10
-        call print_a
-        dec C
-        ld a, c
-        cp 0
-        jp nz, Pr0
 
-        ld b, Width
-Pr2:    
-        LD A,(HL)       ; Get character in buffer
-        call print_a
-        INC HL          ; Next character in buffer
-        djnz Pr2        ; Count down and loop
 
-        RET             ; Done
-
+        ; Helper routines
 GOFL_Home:   
         call message
         DB ESC,'[H',0
@@ -224,9 +215,36 @@ GOFL_SCursor:
         DB ESC,'[?25h',0
         ret
 
-initial_pattern: 
+initial_pattern1: 
         DB '................................................................................'
         DB '................................................................................'
+        DB '................................................................................'
+        DB '................................................................................'
+        DB '................................................................................'
+        DB '................................................................................'
+        DB '................................................................................'
+        DB '................................................................................'
+        DB '................................................................................'
+        DB '................................................................................'
+        DB '................................................................................'
+        DB '................................................................................'
+        DB '................................................................................'
+        DB '...................................................#............................'
+        DB '.....................................................#..........................'
+        DB '..................................................##..###.......................'
+        DB '................................................................................'
+        DB '................................................................................'
+        DB '................................................................................'
+        DB '................................................................................'
+        DB '................................................................................'
+        DB '................................................................................'
+        DB '................................................................................'
+        DB '................................................................................'
+        DB '................................................................................'
+
+initial_pattern2: 
+        DB '................................................................................'
+        DB '..##............................................................................'
         DB '.........................#......................................................'
         DB '.......................#.#......................................................'
         DB '.............##......##............##...........................................'
@@ -251,6 +269,33 @@ initial_pattern:
         DB '................................................................................'
         DB '................................................................................'
 
+initial_pattern3: 
+        DB '................................................................................'
+        DB '................................................................................'
+        DB '....................................................................##..........'
+        DB '....................................................................##..........'
+        DB '................................................................................'
+        DB '.....................#..#.......................................................'
+        DB '.........................#.......................####...........................'
+        DB '.....................#...#......................................................'
+        DB '......................####.........................####.........................'
+        DB '................................................................................'
+        DB '....#...........................................................................'
+        DB '.....#..........................................................................'
+        DB '...###..........................................................................'
+        DB '...................................................................#..#.........'
+        DB '..................................................................#.............'
+        DB '..................................................................#...#.........'
+        DB '...........................................###....................####..........'
+        DB '..........................................###...................................'
+        DB '................................................................................'
+        DB '................................................................................'
+        DB '................................................................................'
+        DB '................................................................................'
+        DB '................................................................................'
+        DB '................##..............................................................'
+        DB '................##..............................................................'
+
 show_intro_screen:
     call GOFL_Cls
     call message
@@ -262,23 +307,65 @@ show_intro_screen:
     ret
 
 wait_for_key:
-    call char_in
-    cp 0
-    jp z, wait_for_key
-    ret
+        ; Waits for a key, and generates a random number in b, which it returns!
+        ld b, 0
+wait_for_key1:
+        inc b
+        call char_in
+        cp 0
+        jp z, wait_for_key1
+        ret
 
 copy_initial_pattern:
-    ; Copy the starting pattern into buffer 1
-    ld bc, Size
-    ld de, Buffer1
-    ld hl, initial_pattern
+    ; Copy the starting pattern into the buffer.
+    ; The pointer to the pattern is passed in HL.
+    ; The pattern is made of "." and "#" but we store it in the buffer as
+    ; 1s and 0s. We do this by ANDing the char with %00000001, which is
+    ; why the '#' char needs to be ODD and the '.' char needs to be EVEN.
+    
+    push hl
+    ; But first, totally zero out the entire buffer
+    ld hl, Buffer
+    ld (hl), 0
+    ld de, Buffer+1
+    ld b, Height+3
+    ld c, 0
     ldir
+
+    pop hl
+
+    ; Now copy the pattern to the buffer
+    ld d, BufferPage+1                  ; Initialise at location 1,1
+    ld e, 1                             ; in the buffer (top left is 0,0)
+    ld c, Height
+copy_initial_pattern_rows:
+    ld b, Width
+    push hl                             ; Store pattern pointer
+copy_initial_pattern_cols:
+    ld a, (hl)                          ; Copy from pattern to buffer
+    and %00000001                       ; Isolate bit 0 only
+    ld (de), a
+    inc hl                              ; Move to next location in pattern
+    inc e                               ; next column
+    djnz copy_initial_pattern_cols      ; loop columns
+    pop hl                              ; Back to start of current row in pattern
+    push de
+    ld de, PatternWidth
+    add hl, de                          ; Move to next row in pattern
+    pop de
+    ld e, 1                             ; Back to start of buffer row
+    inc d                               ; But move down a row
+    dec c                               ; loop rows
+    jr nz, copy_initial_pattern_rows
     ret
 
-; Up until this point, all is in ROM, but this next area needs to be ram:
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; The buffer needs to be in RAM... ;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+Buffer equ $8000
+BufferPage equ $80
 
-Buffer1 equ 32768 
-Buffer2 equ 32768+Size
+
 
 
 

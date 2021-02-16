@@ -106,7 +106,7 @@ not_t:
 	cp 'g'					; Game-of-Life
 	jr nz, unknown_char
     call GOFL_Begin
-	jp monitor_start
+	jp monitor_loop
 
 unknown_char:
 	call print_a			; If we don't understand it, show it!
