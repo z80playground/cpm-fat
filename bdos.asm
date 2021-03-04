@@ -251,13 +251,8 @@ BDOS_Select_Disk:
     ENDIF
 
     ; Disk is in "E". 0 = A:, 15 = P:
-    ld a, (current_disk)                                    ; Are we already on the desired disk?
-    ld b, a
     ld a, e
     and %00001111                                           ; Make sure desired disk is in range 0..15
-    cp b                                                    ; If current and desired are the same
-    jp z, return_0_in_a                                     ; ignore this call.
-
     ld (current_disk), a                                    ; Store disk
 
     ; Now check that directory actually exists, and if not, make it
