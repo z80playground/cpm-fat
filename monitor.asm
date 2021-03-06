@@ -4,6 +4,10 @@
 monitor_start:
     call monitor_init
 
+monitor_restart:
+	call clear_screen
+	call show_welcome_message
+
 monitor_loop:
 	ld a, '>'
 	call print_a
@@ -100,13 +104,19 @@ not_c:
 	jr nz, not_t
     call check_tbasic_structure
     call TBSTART
-	jp monitor_start
+	jp monitor_restart
 
 not_t:
 	cp 'g'					; Game-of-Life
-	jr nz, unknown_char
+	jr nz, not_g
     call GOFL_Begin
-	jp monitor_loop
+	jp monitor_restart
+
+not_g:
+	cp 'b'					; Burn-in test
+	jr nz, unknown_char
+    call burn_in
+	jp monitor_restart
 
 unknown_char:
 	call print_a			; If we don't understand it, show it!
@@ -134,6 +144,7 @@ show_welcome_message:
 	db '4 = ROM OFF', 13, 10
 	db 'd = Disk LED toggle', 13, 10
 	db '# = Execute HALT instruction',13,10
+	db 'b = Run burn-in test',13,10
 	db '/ = Show this Menu',13,10
 	db 13,10,0
 	ret
@@ -154,9 +165,6 @@ monitor_init1:
 	call user_off
 
     call ram_fill
-
-	call clear_screen
-	call show_welcome_message
     ret
 
 ram_fill:
@@ -265,15 +273,280 @@ goto_page_0:
 
 ; -------------------------------------------------------------------------------------------------
 
+; This is the BURN-IN test.
+; I use it on new Z80 Playground boards that I have assemmbled, to check them.
+; It runs for about an hour, reads and writes files to the USB Drive,
+; flashes the LEDs, prints things to the screen etc.
+; The idea is that if it is still running after an hour, the board is good.
+burn_x equ 39000
+burn_y equ 39001
+burn_in_dump_area equ 39002
+
+burn_in:
+	call clear_screen
+	call message
+	db 'Starting BURN-IN test. This takes about 30 minutes.',13,10,0
+
+	; Draw empty box
+
+	ld a, 1
+	ld (burn_y), a				
+draw_loop_y:
+	call space
+	ld b, 35
+draw_loop_x:
+	ld a, 178
+	call print_a
+	djnz draw_loop_x
+
+	call newline
+
+	ld a, (burn_y)
+	inc a
+	ld (burn_y), a
+	cp 20
+	jr c, draw_loop_y
+
+	; Now main burn in loop
+
+	ld a, 2
+	ld (burn_y), a				
+burn_in_loop_y:
+	ld a, 2
+	ld (burn_x), a				
+burn_in_loop_x:
+	call one_minute_burn_in
+	ld a, (burn_x)
+	inc a
+	ld (burn_x), a
+	cp 34
+	jr nz, burn_in_loop_x
+	ld a, (burn_y)
+	inc a
+	ld (burn_y), a
+	cp 18
+	jr nz, burn_in_loop_y
+
+	call newline
+	call message
+	db 13,10,'YAY! All tests pass! Press a key to continue...',13,10,0
+burn_in_wait:
+	call char_in			; get a char from keyboard
+	cp 0					; If it's null, ignore it
+	jr z,burn_in_wait	
+	ret
+
+one_minute_burn_in:
+	; set cursor position
+    ld a, ESC
+    call print_a
+    ld a, '['
+    call print_a
+    ld a, (burn_y)
+	inc a
+    call print_a_as_decimal
+    ld a, ';'
+    call print_a
+    ld a, (burn_x)
+	inc a
+    call print_a_as_decimal
+    ld a, 'H'
+    call print_a
+
+	; set foreground colour
+    ld a, ESC
+    call print_a
+    ld a, '['
+    call print_a
+    ld a, '3'
+    call print_a
+    ld a, (burn_x)
+	srl a
+	srl a
+	add a, '0'
+    call print_a
+    ld a, 'm'
+    call print_a
+
+	; set background colour
+    ld a, ESC
+    call print_a
+    ld a, '['
+    call print_a
+    ld a, '4'
+    call print_a
+    ld a, (burn_y)
+	srl a
+	srl a
+	add a, '0'
+    call print_a
+    ld a, 'm'
+    call print_a
+
+	ld a, 221
+	call print_a
+
+	; Normal colour again
+    ld a, ESC
+    call print_a
+    ld a, '['
+    call print_a
+    ld a, '0'
+    call print_a
+    ld a, 'm'
+    call print_a
+
+	call burn_in_write_file
+
+	ld b, 5
+burn_in_inner_loop:
+	push bc
+	call user_on
+	call long_pause
+	call user_off
+	call long_pause
+	call disk_on
+	call long_pause
+	call disk_off
+	call long_pause
+	pop bc
+	djnz burn_in_inner_loop
+
+	call burn_in_read_file
+	call burn_in_erase_file
+	ret
+
+burn_in_read_file:
+	; Read the file and check the content.
+	; If not good, halt the processor.
+	ld hl, ROOT_NAME
+	call open_file
+	ld hl, BURN_IN_NAME
+	call open_file
+
+	ld a, BYTE_READ
+	call send_command_byte
+	ld a, 255                           ; Request all of the file
+	call send_data_byte
+	ld a, 255                           ; Yes, all!
+	call send_data_byte
+
+	ld a, GET_STATUS
+	call send_command_byte
+	call read_data_byte
+	ld hl, burn_in_dump_area                       
+burn_in_load_loop1:
+	cp USB_INT_DISK_READ
+	jr nz, burn_in_load_finished
+
+	push hl
+	call disk_on
+	ld a, RD_USB_DATA0
+	call send_command_byte
+	call read_data_byte
+	pop hl
+	call read_data_bytes_into_hl
+	push hl
+	call disk_off
+	ld a, BYTE_RD_GO
+	call send_command_byte
+	ld a, GET_STATUS
+	call send_command_byte
+	call read_data_byte
+	pop hl
+	jp burn_in_load_loop1
+burn_in_load_finished:
+	call close_file
+
+	; Now compare file content with what we wrote there originally
+	ld de, BURN_IN_NAME
+	ld hl, burn_in_dump_area
+	ld b, 10
+burn_in_compare_loop:	
+	ld a, (de)
+	cp (hl)
+	jr nz, burn_in_compare_failed
+	inc de
+	inc hl
+	djnz burn_in_compare_loop
+	ret
+
+burn_in_compare_failed:
+	call message
+	db 'Files were different!',13,10,0
+	halt
+
+burn_in_erase_file:
+	; Try to open the test file	
+	ld hl, ROOT_NAME
+	call open_file
+	ld hl, BURN_IN_NAME
+	call open_file
+	jr nz, burn_in_file_not_found
+	call close_file
+
+	; Erase it if it exists
+	ld a, SET_FILE_NAME
+	call send_command_byte
+	ld hl, BURN_IN_NAME
+	call send_data_string
+	ld a, FILE_ERASE
+	call send_command_byte
+	call read_status_byte
+burn_in_file_not_found:
+	call close_file
+	ret
+
+burn_in_write_file:
+	call burn_in_erase_file
+
+	; Create it and put a value in it
+	ld de, BURN_IN_NAME
+	call create_file
+
+	ld a, BYTE_WRITE
+	call send_command_byte
+
+	; Send number of bytes we are about to write, as 16 bit number, low first
+	call get_program_size
+	ld a, 10
+	call send_data_byte
+	ld a, 0
+	call send_data_byte
+
+	ld hl, BURN_IN_NAME
+	call write_loop
+	call close_file
+	ret
+
+print_a_as_decimal:
+	ld b, 0
+print_a_as_decimal1:
+	cp 10
+	jr c, print_a_as_decimal_units
+	inc b
+	ld c, 10
+	sub c
+	jr print_a_as_decimal1
+
+print_a_as_decimal_units:
+	push af
+	ld a, b
+	cp 0
+	jr z, print_a_as_decimal_units1
+	add a, '0'
+	call print_a
+print_a_as_decimal_units1:
+	pop af
+	add a, '0'
+	call print_a
+	ret
+
+BURN_IN_NAME:
+	db 'BURNIN.TXT',0
+
 include "printing.asm"
-; include "uart.asm"
-; include "debug.asm"
-; include "lights.asm"	
-; include "pauses.asm" 
-; include "memorystick.asm"
-; include "numbers.asm"
-; include "workspace.asm"
- include "test_uart.asm"
+include "test_uart.asm"
 
 
 the_end:
