@@ -1,0 +1,72 @@
+                              WS.COM PATCH POINTS
+                   (abbreviated and updated from WSBIBLE.DOC)
+             (system control and printer patch points not included)
+        (versions prior to 2.26 do no use labels, use address instead)
+
+00    = hex number
+#00   = hex number that tells how many hex bytes follow
+00-00 = a range of hex numbers
+< >   = comments
+To modify the actual file, subtract 100h from the memory location (IE: 193=093)
+
+        MEM
+        LOC
+LABEL   300  LEN  INSTALLED ID TEST                      RANGE  DEFAULT
+------  ---  ---  -------------------------------------  -----  --------
+IDTEX   18F   34  TERMINAL ID TEXT                       (varies)
+PIDTEX  1B3   34  PRINTER ID TEXT                        (varies)
+PROTTX  1D7   34  PRINTER PROTOCOL TEXT                  (varies)
+PDRVTX  1FB   34  PORT DRIVER TEXT                       (varies)
+        134    1  INSTALL FLAG(00=installed,FF=not inst) 00 FF  00
+
+LABEL   300  LEN  TERMINAL ESCAPE SEQUENCE CODES   CTRL  RANGE  DEFAULT
+------  ---  ---  -------------------------------------  -----  --------
+HITE    248    1  SCREEN HEIGHT(24 lines)                10-19  18
+WID     249    1  SCREEN WIDTH(80 columns)               40-50  50
+CLEAD1  24A    9  CURSOR POS-LEAD-IN STR                       #00 00-00
+CLEAD2  253    5  CURSOR POS-STR BETWEEN COL/LINE              #00 00-00
+CTRAIL  258    5  CURSOR POS-TRAILING STR                      #00 00-00
+CB4LFG  25D    1  CURSOR POS-FLAG(00=ln/col,FF=col/ln)   00 FF  00
+LINOFF  25E    1  CURSOR POS-LINE OFFSET                 00-20  20
+COLOFF  25F    1  CURSOR POS-COLUMN OFFSET               00-20  20
+ASCUR   260    1  CURSOR POS-DATA(00=binary,02=digit)    00 02  00
+ERAEOL  26D    7  ERASE TO END OF LINE              ^QY        #00 00-00
+LINDEL  274    7  DELETE LINE                       ^Y         #00 00-00
+LININS  27B    9  INSERT LINE                       ^N         #00 00-00
+IVON    284    7  TURN ON HIGHLIGHTING                         #00 00-00
+                   (inverse video, half intensity, underlining)
+IVOFF   28B    7  TURN OFF HIGHLIGHTING                        #00 00-00
+                   (inverse video, half intensity, underlining)
+TRMINI  292    9  TERMINAL INITIALIZATION STRING               #00 00-00
+TRMUNI  29B    9  TERMINAL UNINITIALIZATION STRING             #00 00-00
+USELST  2AA    1  CAN USE LAST LINE ON CRT FLAG(FF=on,00=off)   00
+
+LABEL   300  LEN  INITIAL DELAYS                         RANGE  DEFAULT
+------  ---  ---  -------------------------------------  -----  --------
+DELCUS  2AE    1  CURSOR ADDRESSING DELAY(msec)          00-FF  0A
+DELMIS  2AF    1  OTHER MISC FUNCT DELAY(msec)           00-FF  05
+DEL1    2CF    1  CURSOR BLINK-ON SHORT DELAY(msec)      00-FF  03
+DEL2    2D0    1  CURSOR BLINK-OFF MED-SHORT DELAY(msec) 00-FF  09
+DEL3    2D1    1  SUBMENUS MED-LONG DELAY(msec)          00-FF  19
+DEL4    2D2    1  MESSAGES AND SIGN-ONS LONG DELAY(msec) 00-FF  40
+DEL5    2D3    1  SCREEN REDISPLAY/REFRESH DELAY(msec)   00-FF  09
+
+LABEL   300  LEN  INITIAL SETUP                    CTRL  RANGE  DEFAULT
+------  ---  ---  -------------------------------------  -----  --------
+DEFDSK  2DC    1  FIND .OVR FILES ON DRIVE(01=A:,02=B:)  01-16  01
+ITHELP  360    1  HELP LEVEL                        ^JH  00-03  03
+ITITOG  362    1  INSERT MODE(FF=on,00=off)         ^V   00 FF  FF
+ITDSDR  363    1  FILE DIR DISPLAY(FF=on,00=off)    ^KF  00 FF  FF
+INITWF  385    1  WORD WRAP(FF=on,00=off)           ^OW  00 FF  FF
+    +1  386    1  JUSTIFY(FF=on,00=off)             ^OJ  00 FF  FF
+    +2  387    1  VARIABLE TABS(FF=on,00=off)       ^OV  00 FF  FF
+    +3  388    1  SOFT HYPHEN(FF=on,00=off)         ^OE  00 FF  00
+    +4  389    1  HYPEN-HELP(FF=on,00=off)          ^OH  00 FF  FF
+    +5  38A    1  CNTRL CHARS DISPLAY(FF=on,00=off) ^OD  00 FF  FF
+    +6  38B    1  RULER LINE DISPLAY(FF=on,00=off)  ^OT  00 FF  FF
+    +8  38D    1  PAGE BREAK DISPLAY(FF=on,00=off)  ^OP  00 FF  FF
+    +9  38E    1  LINE SPACING                      ^OS  01-09  01
+    +A  38F    1  MODE(FF=column,00=block)          ^KN  00 FF  00
+
+        838       END OF USER PATCHING ACCESSABLE AREA
+
