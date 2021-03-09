@@ -19,10 +19,16 @@ These should all be assembled into .BIN files and put into the /CPM directory or
 
 Also, to get the system started, there is a boot loader called CPM.ASM. This should be assembled to CPM.HEX and put in the EEPROM.
 
+
 ## Releases
 
 You can find the precompiled binary-files for previous releases beneath the [dist/](dist/) directory.   Place the contents of your chosen release into the `/CPM` directory on your USB drive then restart your system to take it into use.
 
+
 ## USB Drive
 
 The full content of the USB Drive supplied with the kit can be found beneath the [disk/](disk/) directory.
+
+## Utilities
+
+There are a small collection of utilities located beneath [utils/](utils/), which may be interesting/useful.
