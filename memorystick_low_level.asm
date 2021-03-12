@@ -210,6 +210,7 @@ close_file:
     call send_command_byte
     ld a, 1                             ; 1 = update file size if necessary
     call send_data_byte
+    call read_status_byte
     ret
 
 create_directory:

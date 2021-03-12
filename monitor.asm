@@ -413,6 +413,7 @@ burn_in_inner_loop:
 	djnz burn_in_inner_loop
 
 	call burn_in_read_file
+
 	call burn_in_erase_file
 	ret
 
@@ -459,7 +460,7 @@ burn_in_load_finished:
 	call close_file
 
 	; Now compare file content with what we wrote there originally
-	ld de, BURN_IN_NAME
+	ld de, config_file_loc
 	ld hl, burn_in_dump_area
 	ld b, 10
 burn_in_compare_loop:	
@@ -474,10 +475,23 @@ burn_in_compare_loop:
 burn_in_compare_failed:
 	call message
 	db 'Files were different!',13,10,0
+	call message
+	db 'Expected: ',0
+	ld hl, config_file_loc
+	call show_string_at_hl
+	call newline
+
+	call message
+	db 'Actual  : ',0
+	ld hl, burn_in_dump_area
+	call show_string_at_hl
+	call newline
+	
 	halt
 
 burn_in_erase_file:
 	; Try to open the test file	
+	call close_file
 	ld hl, ROOT_NAME
 	call open_file
 	ld hl, BURN_IN_NAME
@@ -486,6 +500,8 @@ burn_in_erase_file:
 	call close_file
 
 	; Erase it if it exists
+	ld hl, ROOT_NAME
+	call open_file
 	ld a, SET_FILE_NAME
 	call send_command_byte
 	ld hl, BURN_IN_NAME
@@ -501,9 +517,16 @@ burn_in_write_file:
 	call burn_in_erase_file
 
 	; Create it and put a value in it
+	ld hl, ROOT_NAME
+	call open_file
 	ld de, BURN_IN_NAME
 	call create_file
+	jr z, burnin_create_ok 
+	call message
+	db 'ERROR creating burn-in file.',13,10,0
+	halt
 
+burnin_create_ok:
 	ld a, BYTE_WRITE
 	call send_command_byte
 
@@ -514,7 +537,30 @@ burn_in_write_file:
 	ld a, 0
 	call send_data_byte
 
-	ld hl, BURN_IN_NAME
+	ld hl, config_file_loc
+	ld (hl), 'H'
+	inc hl
+	ld (hl), 'e'
+	inc hl
+	ld (hl), 'l'
+	inc hl
+	ld (hl), 'l'
+	inc hl
+	ld (hl), 'o'
+	inc hl
+	ld a, (burn_x)
+	add a, 33
+	ld (hl), a
+	inc hl
+	ld (hl), a
+	inc hl
+	ld (hl), a
+	inc hl
+	ld (hl), a
+	inc hl
+	ld (hl), 0
+
+	ld hl, config_file_loc			; Write the bytes that are in this temp area
 	call write_loop
 	call close_file
 	ret
