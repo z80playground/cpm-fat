@@ -1,0 +1,6 @@
+#!/bin/bash
+
+which pasmo || apt-get update && apt-get install -y pasmo
+which make  || apt-get update && apt-get install -y make
+
+make

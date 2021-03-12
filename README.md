@@ -1,19 +1,55 @@
-# cpm-fat
-CP/M for the Z80 Playground that runs on the FAT disk format. This enables you to run CP/M v2.2 on the Z80 Playground and transfer files easily to and from your PC, because this version of CP/M runs on FAT, so the files are compatible between Windows and CP/M.
+# Overview
 
-For more details see https://8bitStack.co.uk
+This repository contains the files required to get CP/M 2.2 running upon the "Z80 Playground" board - which uses a FAT filesystem hosted upon an external USB-stick.
 
-For videos about the Z80 Playground see https://youtube.com/playlist?list=PL3arA6T9kycptsudBx3MyLbHCOjdoBhO6
+For more details of the board, and discussion please see the official homepage:
 
-The main parts of this repo are:
+* https://8bitStack.co.uk
+  * [The forums](https://8bitstack.co.uk/forums/forum/z80-playground-early-adopters) contain more useful content too.
+* You can also see various videos on youtube:
+  * [Z80 Playground Playlist](https://www.youtube.com/playlist?list=PL3arA6T9kycptsudBx3MyLbHCOjdoBhO6)
+
+
+## Contents
+
+This repository contains two things:
+
+* The assembly language source-files which will build CP/M.
+* A set of binaries which can be copied to your USB-stick to produce a useful system.
+
+
+## Source Code
+
+The source code available here is made of a couple of different files:
 
 * CORE.ASM - The core routines for accessing the hardware.
 * BIOS.ASM - A stub of a CP/M BIOS.
 * BDOS.ASM - My implementation of the CP/M BDOS.
 * CCP.ASM - The standard Digital Research CCP.
 
-These should all be assembled into .BIN files and put into the /CPM directory or your USB Drive. The assembler I use is Pasmo.
+You can compile these via the `pasmo` compiler, or look at the latest versions upon our [releases page]().  If you have `make` and `pasmo` installed you can generate the compiled versions via:
 
-Also, to get the system started, there is a boot loader called CPM.ASM. This should be assembled to CPM.HEX and put in the EEPROM.
+     $ make
 
-The full content of the USB Drive is contained in "master disk.zip" in case you ever need it.
+(The system will rebuild intelligently if you edit any included files.)
+
+Regardless of whether you build from source, or download the prebuilt versions, you should place them upon your USB-stick beneath the top-level `/CPM` directory.
+
+### Source Code Bootloader
+
+To get the system started there is a boot loader compiled and stored within the EEPROM.  If you have a EEPROM programmer you should upload the contents of `CPM.BIN` to it.
+
+The bootlaoder runs a simple monitor and allows CP/M to be launched.  Launching CP/M involves reading [/CPM/cpm.cfg](DISK/CPM/cpm.cfg) which contains the list objects to read into RAM, along with the addresses to which each should be loaded.  Once the files are loaded the system jumps to the CP/M entry-point.
+
+
+## System Binaries
+
+The full content of the USB Drive supplied with the kit can be found beneath the [disk/](disk/) directory.
+
+CP/M doesn't have the concept of a directory, so all files are arranged at the top-level, however for organization different "drives" are used.
+
+For example you'll find games installed beneath "G:", as you can see via:
+
+    A> G:
+    G> DIR
+    ..

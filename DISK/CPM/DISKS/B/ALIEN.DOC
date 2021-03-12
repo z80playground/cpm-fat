@@ -1,0 +1,122 @@
+
+
+
+Documentation for Alien.Bas
+
+By James S. Ghofulpo
+
+Version 1.0
+
+
+1. Configuration
+
+     Looë foò thå linå whicè declareó cls$®  Iæ yoõ arå runninç á 
+terminaì  thaô  haó  á "cleaò anä  home¢  function¬  replacå  thå 
+chr$(12© witè that®   Otherwise¬ deletå thió linå anä thå prograí 
+wilì  form-feeä  (prinô  3°  oò sï  lines)®   Thió  ió  presentlù 
+configured for the Hazeltine 1500.
+
+2. What the map means
+
+     Iî anù particulaò alieî game¬ therå wilì bå á map®  Yoõ wilì 
+bå showî oî thaô mað iî thå gamå aó aî 'R§ foò Ripley¬  thå  maiî 
+heroine®  Say¬ iî á particulaò setting¬ yoõ seå this:
+
+------------
+! ######## !
+! # $  A   !
+! ####   F !   Disregard the border.
+! .  R     !
+! ##### E  !
+! S      D !
+------------
+
+Yoõ  arå thå 'R'®   Alienó arå showî aó '$'®   Iæ yoõ caî hiô thå 
+alieî  (iæ  hå moves)¬  hå wilì diå sincå yoõ caî  shooô  througè 
+walls®   Thå  Á  ió ammunitioî (2µ rounds)¬  thå Æ  ió  fooä  (2µ 
+KiloCalories)®   Thå  Ó  ió starô (showî iî leveló  greateò  thaî 
+one)¬  thå  Å  ió  Enä  (wherå tï evacuate)¬  anä thå  Ä  ió  thå 
+detonation device.  The period (.) is a doorway.
+
+3. Object
+
+     Thå  objecô  oæ  thå gamå Alienó ió tï destroù  alì  aliens¬ 
+showî  oî  thå screeî aó dollaò signs®   Yoõ havå á rangå  oæ  2° 
+meteró (³ blocks away), and can shoot through anything.
+     Thå  aliens¬  movinç randomly¬  caî onlù gï wherå  therå  ió 
+space®  Theù cannoô opeî doors¬ eaô food¬ oò takå ammo¬ mucè lesó 
+gï througè walls.
+     Iæ yoõ ruî ouô oæ fooä anä ammo¬ yoõ caî destroù thå shið bù 
+goinç tï thå forwarä enä oæ thå shið tï thå 'D§ anä pressinç  'D§ 
+oî  thå  keyboarä foò detonate®   Thå shið wilì counô  down¬  anä 
+explode.  To get away from the blast, use the exit (E).
+
+4. Food and ammo
+Š     Witè everù movå yoõ make¬ yoõ uså .µ Kilocalorieó oæ energy®  
+Yoõ  musô  keeð thió abovå zerï tï live¬  oò yoõ wilì  starvå  tï 
+death.
+     Tï kilì aliens¬  yoõ neeä ammunition®   Eacè boø oæ ammï (A© 
+holdó 2µ rounds¬  morå thaî enough®  Onlù alienó arå destroyeä bù 
+ammo¬ anä yoõ cannoô puncè á holå iî á wall.
+
+5. Doorways
+
+     Thå  doorwaù ió therå tï helð you®   Alienó cannoô geô  intï 
+certaiî  passageó  excepô aô onå enä oò so¬  sï thå oddó  oæ  onå 
+getting in with you is slim.
+     Tï opeî á passage¬  presó 'O'®   Thå dooò wilì open®   NOTEº 
+oncå yoõ opeî á door¬  yoõ cannoô closå it®  Opeî aó fe÷ dooró aó 
+possible.
+
+6. Firing
+
+     Tï  fire¬  presó 'F§ anä thå directioî yoõ  wanô  (8,4,6,2)®  
+Hopefully¬  thå  alieî wilì havå moveä intï youò fire¬  sincå thå 
+displaù  showî  ió onå behinä thå alienó actuaì  spoô  (µ  meteró 
+away)®   Foò thió reason¬  STAÙ AWAÙ froí thå aliens®   Theù kilì 
+withiî  µ meteró range®   Iæ yoõ movå adjacenô tï one¬  theù wilì 
+kilì you.
+
+7. The map
+
+     Iæ yoõ reallù neeä help¬  typå Ð foò ploô thå map®  Yoõ wilì 
+see the whole ship, from the topside.
+
+8. Using the pulse meter
+
+     Thå  pulså meteò wilì givå á distancå tï thå nearesô  alien®  
+Noteº  iæ  yoõ  arå movinç betweeî twï aliens¬  thå closesô  wilì 
+register®   Bå careful¡  Iæ yoõ movå arounä iî á circlå awaù froí 
+the first, you will be directed the other way!
+
+9. Detonation
+
+     Tï destroù thå ship¬  gï tï thå detonatioî centeò ('D'©  anä 
+presó  Ä foò detonate®   Yoõ wilì havå ² minuteó (eacè movå ió  á 
+second) to exit the ship.
+
+10. Help?
+
+     If you REALLY need help, drop me a line at:
+
+                         James Ghofulpo
+                           34116 Janet
+                            Fraser MI
+                              48026
+
+
+                      Quick Reference Card
+Šmap : # = wall      E = end        F = food
+      S = start     A = ammo       $ = alien
+      R = Ripley    D = detonator  . = door
+
+commands : 8,4,6,2         : move
+           F and 8,4,6,2   : fire
+           D (Adj. to 'D') : detonate
+           G (Adj. to F, A): get food, ammo
+           E (Adj. to 'E') : exit
+           O (Adj. to '.') : open door
+           P               : print map
+
+-end-
+
