@@ -16,7 +16,7 @@ This repository contains two things:
 
 * The assembly language source-files which will build CP/M.
 * A set of binaries which can be copied to your USB-stick to produce a useful system.
-
+  * Some of the binaries are generated from the sources beneath [Utils/](Utils/).
 
 ## Source Code
 
