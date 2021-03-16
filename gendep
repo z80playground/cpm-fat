@@ -1,0 +1,62 @@
+#!/usr/bin/perl -w
+#
+# This is a utility script which is invoked by Make to handle
+# dependencies.
+#
+
+
+# Dependencies we've discovered.
+my %discovered;
+
+
+# Read the given file, and look for file-inclusion.  If we found
+# a file that is included scan that too.
+sub include_search {
+
+    # File we're examining
+    my ( $file ) = ( @_ );
+
+    # New inclusions we fond.
+    my @new;
+
+    # Open
+    open( my $handle, "<", $file) or die "Failed to open $file - $!";
+
+    # Read line by line
+    foreach my $line ( <$handle> ) {
+
+        # Is this an include line?
+        if ( $line =~ /^include "([^"]+)"/ ) {
+
+            # save it away.
+            $discovered{$1} += 1;
+
+            # And record that this was newly discovered.
+            push(@new, $1 );
+        }
+    }
+    close( $handle );
+
+    # For any newly discovered includes, scan them too
+    foreach my $name ( @new ) {
+        include_search($name);
+    }
+}
+
+
+#
+# Did we get an argument?  If so process it.
+#
+my $file = shift;
+if ( defined( $file ) ) {
+  include_search( $file );
+}
+
+
+# Show results
+foreach my $file ( sort keys %discovered ) {
+  print $file . "\n";
+}
+
+# All done
+exit 0;
