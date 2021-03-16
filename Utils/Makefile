@@ -6,7 +6,15 @@ all: chk16550.com sd.com
 
 
 #
+# Cleanup
+#
+clean:
+	rm *.com
+
+
+#
 # Convert an .asm file into a .com file, via pasmo.
 #
 %.com: %.asm
 	pasmo $< $@
+

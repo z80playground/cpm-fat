@@ -6,6 +6,12 @@ all: bdos.bin bios.bin ccp.bin core.bin cpm.bin
 
 
 #
+# Cleanup.
+#
+clean:
+	rm *.bin
+
+#
 # This is a magic directive which allows GNU Make to perform
 # a second expansion of things before running.
 #
