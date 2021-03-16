@@ -42,7 +42,7 @@ To get the system started there is a boot loader compiled and stored within the 
 The bootlaoder runs a simple monitor and allows CP/M to be launched.  Launching CP/M involves reading [/CPM/cpm.cfg](DISK/CPM/cpm.cfg) which contains the list objects to read into RAM, along with the addresses to which each should be loaded.  Once the files are loaded the system jumps to the CP/M entry-point.
 
 
-## System Binaries
+## CP/M Binaries
 
 The full content of the USB Drive supplied with the kit can be found beneath the [DISK/](DISK/) directory.
 
@@ -53,3 +53,7 @@ For example you'll find games installed beneath "G:", as you can see via:
     A> G:
     G> DIR
     ..
+
+I've added a copy of the Turbo Pascal compiler beneath `P:`, along with a sample "hello.pas" file.  You can compile this
+
+* [Getting started with Turbo Pascal](TURBO.md)
