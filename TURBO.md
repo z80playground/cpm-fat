@@ -4,7 +4,7 @@ This brief page documents how to get started with Turbo Pascal 3.00A, compiling 
 
 To get started run:
 
-P> turbo
+     P> turbo
 
 You should now be looking at the Turbo Pascal splash screen, showing the version, copyright message and which terminal is configured. At the bottom you'll be asked whether you want to `Include error messages`. For the moment press `Y`.
 
@@ -37,7 +37,7 @@ Choose `Com-file` by pressing `C`, then press `Q` to go back to the main-menu.  
 Now you can launch the editor by pressing `E`.  You'll be prompted for a file to edit, so you can choose something like "steve.pas".  Enter the following program:
 
 
-           Line 1    Col 1   Insert    Indent  A:HELLO.PAS
+           Line 1    Col 1   Insert    Indent  A:STEVE.PAS
        program Hello;
        begin
          writeln ('Hello, world.');
