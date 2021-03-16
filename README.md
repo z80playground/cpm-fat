@@ -1,3 +1,12 @@
+
+* [Overview](#overview)
+* [Contents](#contents)
+* [Source Code](#source-code)
+  * [Bootloader](#bootloader)
+* [CP/M Binaries](#cpm-binaries)
+  * [Additions](#additions)
+
+
 # Overview
 
 This repository contains the files required to get CP/M 2.2 running upon the "Z80 Playground" board - which uses a FAT filesystem hosted upon an external USB-stick.
@@ -35,7 +44,7 @@ You can compile these via the `pasmo` compiler, or look at the latest versions u
 
 Regardless of whether you build from source, or download the prebuilt versions, you should place them upon your USB-stick beneath the top-level `/CPM` directory.
 
-### Source Code Bootloader
+### Bootloader
 
 To get the system started there is a boot loader compiled and stored within the EEPROM.  If you have a EEPROM programmer you should upload the contents of `CPM.BIN` to it.
 
@@ -54,7 +63,7 @@ For example you'll find games installed beneath "G:", as you can see via:
     G> DIR
     ..
 
-## Additions
+### Additions
 
 * I've added a copy of the Turbo Pascal compiler beneath [P:](DISK/CPM/DISKS/P).
   * [Getting started with Turbo Pascal](TURBO.md)
