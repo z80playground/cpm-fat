@@ -46,7 +46,7 @@ The bootlaoder runs a simple monitor and allows CP/M to be launched.  Launching 
 
 The full content of the USB Drive supplied with the kit can be found beneath the [DISK/](DISK/) directory.
 
-CP/M doesn't have the concept of a directory, so all files are arranged at the top-level, however for organization different "drives" are used.
+CP/M doesn't have the concept of subdirectories, so all files are arranged at the top-level, however for organization different "drives" are used.
 
 For example you'll find games installed beneath "G:", as you can see via:
 
@@ -54,6 +54,9 @@ For example you'll find games installed beneath "G:", as you can see via:
     G> DIR
     ..
 
-I've added a copy of the Turbo Pascal compiler beneath `P:`, along with a sample "hello.pas" file.  You can compile this
+## Additions
 
-* [Getting started with Turbo Pascal](TURBO.md)
+* I've added a copy of the Turbo Pascal compiler beneath [P:](DISK/CPM/DISKS/P).
+  * [Getting started with Turbo Pascal](TURBO.md)
+  * Along with a sample "hello.pas" file.
+* I've added Zork 1, 2, & 3 beneath [G:](DISK/CPM/DISKS/G).
