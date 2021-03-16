@@ -27,7 +27,7 @@ The source code available here is made of a couple of different files:
 * BDOS.ASM - My implementation of the CP/M BDOS.
 * CCP.ASM - The standard Digital Research CCP.
 
-You can compile these via the `pasmo` compiler, or look at the latest versions upon our [releases page]().  If you have `make` and `pasmo` installed you can generate the compiled versions via:
+You can compile these via the `pasmo` compiler, or look at the latest versions upon our [releases page](https://github.com/skx/cpm-fat/releases).  If you have `make` and `pasmo` installed you can generate the compiled versions via:
 
      $ make
 
