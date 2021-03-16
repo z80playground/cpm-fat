@@ -44,7 +44,7 @@ The bootlaoder runs a simple monitor and allows CP/M to be launched.  Launching 
 
 ## System Binaries
 
-The full content of the USB Drive supplied with the kit can be found beneath the [disk/](disk/) directory.
+The full content of the USB Drive supplied with the kit can be found beneath the [DISK/](DISK/) directory.
 
 CP/M doesn't have the concept of a directory, so all files are arranged at the top-level, however for organization different "drives" are used.
 
