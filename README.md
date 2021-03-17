@@ -48,12 +48,12 @@ Regardless of whether you build from source, or download the prebuilt versions, 
 
 To get the system started there is a boot loader compiled and stored within the EEPROM.  If you have a EEPROM programmer you should upload the contents of `CPM.BIN` to it.
 
-The bootlaoder runs a simple monitor and allows CP/M to be launched.  Launching CP/M involves reading [/CPM/cpm.cfg](DISK/CPM/cpm.cfg) which contains the list objects to read into RAM, along with the addresses to which each should be loaded.  Once the files are loaded the system jumps to the CP/M entry-point.
+The bootlaoder runs a simple monitor and allows CP/M to be launched.  Launching CP/M involves reading [/CPM/cpm.cfg](dist/CPM/cpm.cfg) which contains the list objects to read into RAM, along with the addresses to which each should be loaded.  Once the files are loaded the system jumps to the CP/M entry-point.
 
 
 ## CP/M Binaries
 
-The full content of the USB Drive supplied with the kit can be found beneath the [dist/](dist/) directory.
+The full content of the USB stick supplied with the kit can be found beneath the [dist/](dist/) directory.
 
 CP/M doesn't have the concept of subdirectories, so all files are arranged at the top-level, however for organization different "drives" are used.
 
@@ -69,3 +69,4 @@ For example you'll find games installed beneath "G:", as you can see via:
   * [Getting started with Turbo Pascal](TURBO.md)
   * Along with a sample "hello.pas" file.
 * I've added Zork 1, 2, & 3 beneath [G:](dist/CPM/DISKS/G).
+  * I've designated the `G:` drive as the game-drive, and moved the hitchhikers guide to the galaxy there too.
