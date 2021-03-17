@@ -25,7 +25,7 @@ This repository contains two things:
 
 * The assembly language source-files which will build CP/M.
 * A set of binaries which can be copied to your USB-stick to produce a useful system.
-  * Some of the binaries are generated from the sources beneath [Utils/](Utils/).
+  * Some of the binaries are generated from the sources beneath [utils/](utils/).
 
 ## Source Code
 
@@ -53,7 +53,7 @@ The bootlaoder runs a simple monitor and allows CP/M to be launched.  Launching 
 
 ## CP/M Binaries
 
-The full content of the USB Drive supplied with the kit can be found beneath the [DISK/](DISK/) directory.
+The full content of the USB Drive supplied with the kit can be found beneath the [dist/](dist/) directory.
 
 CP/M doesn't have the concept of subdirectories, so all files are arranged at the top-level, however for organization different "drives" are used.
 
@@ -65,7 +65,7 @@ For example you'll find games installed beneath "G:", as you can see via:
 
 ### Additions
 
-* I've added a copy of the Turbo Pascal compiler beneath [P:](DISK/CPM/DISKS/P).
+* I've added a copy of the Turbo Pascal compiler beneath [P:](dist/CPM/DISKS/P).
   * [Getting started with Turbo Pascal](TURBO.md)
   * Along with a sample "hello.pas" file.
-* I've added Zork 1, 2, & 3 beneath [G:](DISK/CPM/DISKS/G).
+* I've added Zork 1, 2, & 3 beneath [G:](dist/CPM/DISKS/G).
