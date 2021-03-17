@@ -24,7 +24,7 @@ For more details of the board, and discussion please see the official homepage:
 This repository contains two things:
 
 * The assembly language source-files which will build CP/M.
-* A set of binaries which can be copied to your USB-stick to produce a useful system.
+* A set of binaries, organized into distinct drives, which can be copied to your USB-stick to produce a useful system.
   * Some of the binaries are generated from the sources beneath [utils/](utils/).
 
 ## Source Code
@@ -70,3 +70,4 @@ For example you'll find games installed beneath "G:", as you can see via:
   * Along with a sample "hello.pas" file.
 * I've added Zork 1, 2, & 3 beneath [G:](dist/CPM/DISKS/G).
   * I've designated the `G:` drive as the game-drive, and moved the hitchhikers guide to the galaxy there too.
+* To ease locating files I added `locate.com`, with source in [utils/](utils/).
