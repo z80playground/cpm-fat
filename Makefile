@@ -2,14 +2,14 @@
 #
 # The files we wish to generate.
 #
-all: bdos.bin bios.bin ccp.bin core.bin cpm.bin
+all: bdos.bin bios.bin ccp.hex core.bin cpm.bin
 
 
 #
 # Cleanup.
 #
 clean:
-	rm *.bin
+	rm *.bin *.hex
 
 #
 # This is a magic directive which allows GNU Make to perform
@@ -30,4 +30,7 @@ clean:
 # binary files would be rebuilt.
 #
 %.bin: %.asm $$(shell ./gendep %.asm)
+	pasmo $<  $@
+
+%.hex: %.asm $$(shell ./gendep %.asm)
 	pasmo $<  $@
