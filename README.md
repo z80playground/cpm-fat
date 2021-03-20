@@ -9,9 +9,9 @@
 
 # Overview
 
-This repository contains the files required to get CP/M 2.2 running upon the "Z80 Playground" board - which uses a FAT filesystem hosted upon an external USB-stick.
+This repository contains a distribution of CP/M 2.2, which can run upon the "Z80 Playground" board.  The Z80 Playground single-board computer uses an external FAT-filesystem stored upon a USB-Stick to provide storage, giving it very easy interoperability with an external computer.
 
-For more details of the board, and discussion please see the official homepage:
+For more details of the board please see the official homepage:
 
 * https://8bitStack.co.uk
   * [The forums](https://8bitstack.co.uk/forums/forum/z80-playground-early-adopters) contain more useful content too.
@@ -24,8 +24,9 @@ For more details of the board, and discussion please see the official homepage:
 This repository contains two things:
 
 * The assembly language source-files which will build CP/M.
-* A set of binaries, organized into distinct drives, which can be copied to your USB-stick to produce a useful system.
-  * Some of the binaries are generated from the sources beneath [utils/](utils/).
+* A set of binaries, organized into [distinct drives](#cpm-binaries), which can be copied to your USB-stick to produce a useful system.
+  * Some of the binaries are generated from the sources beneath [utils/](utils/), others are were obtained from historical release archives.
+
 
 ## Source Code
 
@@ -46,7 +47,7 @@ Regardless of whether you build from source, or download the prebuilt versions, 
 
 ### Bootloader
 
-To get the system started there is a boot loader compiled and stored within the EEPROM.  If you have a EEPROM programmer you should upload the contents of `CPM.BIN` to it.
+To get the system started there is a boot loader compiled and stored within the EEPROM.  If you have a EEPROM programmer you should upload the contents of `CPM.HEX` to it.
 
 The bootlaoder runs a simple monitor and allows CP/M to be launched.  Launching CP/M involves reading [/CPM/cpm.cfg](dist/CPM/cpm.cfg) which contains the list objects to read into RAM, along with the addresses to which each should be loaded.  Once the files are loaded the system jumps to the CP/M entry-point.
 
@@ -55,19 +56,46 @@ The bootlaoder runs a simple monitor and allows CP/M to be launched.  Launching 
 
 The full content of the USB stick supplied with the kit can be found beneath the [dist/](dist/) directory.
 
-CP/M doesn't have the concept of subdirectories, so all files are arranged at the top-level, however for organization different "drives" are used.
+CP/M doesn't have the concept of sub-directories, so all files are arranged at the top-level, however for organization different "drives" are used.  To help keep things organize I've shuffled some of the contents around such that the binaries are grouped into a set of logical collections:
 
-For example you'll find games installed beneath "G:", as you can see via:
+
+| Drive  | Contents                        |
+| ------ | ------------------------------- |
+| A:     | All general-purpose utilities.  |
+| B:     | BASIC Code and interpreter.     |
+| C:     | BDS C Compiler/Linker.  [TODO]  |
+| D:     | Wordstar files?  [TODO: Move]   |
+| E:     | Editor - WordStar               |
+| F:     | Z80 FORTH [TODO]                |
+| G:     | Games - all types               |
+| H:     |                                 |
+| I:     |                                 |
+| J:     |                                 |
+| K:     |                                 |
+| L:     |                                 |
+| M:     |                                 |
+| N:     |                                 |
+| O:     |                                 |
+| P:     | Tturbo Pascal 3.00A             |
+
+To look at the list of games, for example, you'll run something like this:
 
     A> G:
     G> DIR
     ..
 
+Or:
+
+    A> DIR G:*.COM
+
+
+
 ### Additions
 
+* Currently the source of the runtime system hasn't been changed, instead I've shuffled the various executables around for clarity.
 * I've added a copy of the Turbo Pascal compiler beneath [P:](dist/CPM/DISKS/P).
-  * [Getting started with Turbo Pascal](TURBO.md)
-  * Along with a sample "hello.pas" file.
+  * I wrote a simple [getting started with Turbo Pascal](TURBO.md) guide.
+  * Included is also a sample "hello.pas" file.
 * I've added Zork 1, 2, & 3 beneath [G:](dist/CPM/DISKS/G).
-  * I've designated the `G:` drive as the game-drive, and moved the hitchhikers guide to the galaxy there too.
-* To ease locating files I added `locate.com`, with source in [utils/](utils/).
+  * I've designated the `G:` drive as the game-drive, and moved other games there too.
+* To ease locating files I wrote `locate.com`, with source in [utils/](utils/).
