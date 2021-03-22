@@ -32,10 +32,10 @@ This repository contains two things:
 
 The source code available here is made of a couple of different files:
 
-* CORE.ASM - The core routines for accessing the hardware.
-* BIOS.ASM - A stub of a CP/M BIOS.
-* BDOS.ASM - My implementation of the CP/M BDOS.
-* CCP.ASM - The standard Digital Research CCP.
+* [core.asm](core.asm) - The core routines for accessing the hardware.
+* [bios.asm](bios.asm) - A stub of a CP/M BIOS.
+* [bdos.asm](bdos.asm) - My implementation of the CP/M BDOS.
+* [ccp.asm](ccp.asm) - The standard Digital Research CCP.
 
 You can compile these via the `pasmo` compiler, or look at the latest versions upon our [releases page](https://github.com/skx/cpm-fat/releases).  If you have `make` and `pasmo` installed you can generate the compiled versions via:
 
@@ -47,7 +47,7 @@ Regardless of whether you build from source, or download the prebuilt versions, 
 
 ### Bootloader
 
-To get the system started there is a boot loader compiled and stored within the EEPROM.  If you have a EEPROM programmer you should upload the contents of `CPM.HEX` to it.
+To get the system started there is a boot loader compiled and stored within the EEPROM.  If you have a EEPROM programmer you should upload the contents of `CPM.HEX` to it, which is compiled from [cpm.asm](cpm.asm).
 
 The bootlaoder runs a simple monitor and allows CP/M to be launched.  Launching CP/M involves reading [/CPM/cpm.cfg](dist/CPM/cpm.cfg) which contains the list objects to read into RAM, along with the addresses to which each should be loaded.  Once the files are loaded the system jumps to the CP/M entry-point.
 
