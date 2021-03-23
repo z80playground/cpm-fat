@@ -11,21 +11,11 @@
 ;;   A: Common / Globally useful
 ;;   B: BASIC programs.
 ;;   C: C (C)ompiler
-;;   D:
-;;   E:
-;;   F:
-;;   G: (G)ames
-;;   H
-;;   I
-;;   J
-;;   K
-;;   L
-;;   M
-;;   N
-;;   O
-;;   P: Turbo (P)ascal
+;;   ..
+;;   ..
 ;;
-;; But there are still times when you might forget, so you can run
+;; But there are still times when you might forget, so with this you
+;; can run something like:
 ;;
 ;;   A:LOCATE ZORK*.*
 ;;
@@ -33,8 +23,16 @@
 ;; the files are.
 ;;
 
-BDOS:    EQU 5
-FCB:     EQU 0x005C
+FCB:     EQU 0x5C
+DMA:     EQU 0x80
+
+BDOS_ENTRY_POINT:    EQU 5
+
+BDOS_OUTPUT_SINGLE_CHARACTER:  EQU 2
+BDOS_OUTPUT_STRING:            EQU 9
+BDOS_SELECT_DISK:              EQU 14
+BDOS_FIND_FIRST:               EQU 17
+BDOS_FIND_NEXT:                EQU 18
 
         ;;
         ;; CP/M programs start at 0x100.
@@ -63,7 +61,6 @@ FCB:     EQU 0x005C
         ;; drives from P->A.
         ;;
         ;; Drive number will be stored in B
-real_start:
         ld b, 15
 find_loop:
         push bc
@@ -93,33 +90,30 @@ find_files_on_drive:
         ld (hl),b
 
         ;; Select the disk, explicitly - not sure if this is required.
-        ld c, 14
+        ld c, BDOS_SELECT_DISK
         ld e, b
-        call BDOS
+        call BDOS_ENTRY_POINT
 
         ;; Call the find-first BIOS function
-        ld c, 0x11
+        ld c, BDOS_FIND_FIRST
         ld de, FCB
-        call BDOS
+        call BDOS_ENTRY_POINT
 
+find_more:
         ;; If nothing was found then return.
         cp 255
         ret z
 
-find_more:
         ;; Show the thing we did find.
         call show_result
 
         ;; After the find-first function we need to keep calling
         ;; find-next, until that returns a failure.
-        ld c,18                 ; call find-next
-        ld de,FCB
-        call BDOS
+        ld c, BDOS_FIND_NEXT
+        ld de, FCB
+        call BDOS_ENTRY_POINT
 
-        cp 255                  ; Nothing found?  Then return
-        ret z
-
-        jp find_more            ; then loop around until we run out of matches
+        jp find_more    ; Test return code and loop again
 
 
 
@@ -133,21 +127,20 @@ find_more:
 show_result:
 
         push af                 ; preserve return code from find first/next
-        ld a,(FCB)              ; output drive
+
+        ld a,(FCB)              ; Output the drive-letter and separator
         add a, 65
         call print_character
-
-        ld a, ':'               ; output ":"
+        ld a, ':'
         call print_character
 
         pop af                       ; restore return code from find first/next
         call print_matching_filename ; print the entry
 
-        ;; print newline
-        ld de, newline
-        ld c, 09
-        call BDOS
-        ret
+        ld de, newline          ; Add a trailing newline
+        ld c, BDOS_OUTPUT_STRING
+        jp call_bdos_and_return
+
 
 ;;; ***
 ;;;
@@ -163,24 +156,40 @@ show_result:
 ;;; NOTE: We assume the default DMA address of 0x0080
 ;;;
 print_matching_filename
-        ld b, 11                ; filename is 11 characters
-        LD hl, 0x0080 + 1       ; default DMA area.
 
-        ;; return code from find first/next should be multiplied by 32
-        AND 3               ; Mask the bits since ret is 0/1/2/3
-        ADD A,A             ;MULTIPLY...
-        ADD A,A             ;..BY 32 BECAUSE
-        ADD A,A             ;..EACH DIRECTORY
-        ADD A,A             ;..ENTRY IS 32
-        ADD A,A             ;..BYTES LONG
+        ;; Return code from find-first, or find-next, will be 0, 1, 2, or
+        ;; 3 - and should be multiplied by 32 then added to the DMA area
+        ;;
+        ;; What we could do is:
+        ;;
+        ;;   hl = DMA
+        ;;   a  = a *  32
+        ;;   hl = hl + a
+        ;;
+        ;; However we know the maximum we can have in A is
+        ;; 3 x 32 = 96, and we know the default DMA area is 0x80 (128).
+        ;;
+        ;; So instead what we'll do is:
+        ;;
+        ;; a = a * 32
+        ;; a = a + 128 (DMA offset)
+        ;; h = 0
+        ;; l = a
+        ;;
+        ;; Leaving the correct value in HL, and saving several bytes.
+        ;;
+        and 3               ; Mask the bits since ret is 0/1/2/3
+        add A,A             ; MULTIPLY...
+        add A,A             ; ..BY 32 BECAUSE
+        add A,A             ; ..EACH DIRECTORY
+        add A,A             ; ..ENTRY IS 32
+        add A,A             ; ..BYTES LONG
 
-        ;; hl = hl + a
-        add   a, l    ; A = A+L
-        ld    l, a    ; L = A+L
-        adc   a, h    ; A = A+L+H+carry
-        sub   l       ; A = H+carry
-        ld    h, a    ; H = H+carry
+        add A, DMA + 1          ; Make offset from DMA
+        xor h                   ; high byte is zero
+        ld  l, a                ; low bye is offset
 
+        ld b,11                 ; filename is 11 bytes
 print_matching_filename_loop:
         ld a,(hl)
         push hl
@@ -197,21 +206,20 @@ print_matching_filename_loop:
 ;;; Helper routine to print a single character, stored in the A-register
 ;;;
 print_character:
-        ld c, 0x02
+        ld c, BDOS_OUTPUT_SINGLE_CHARACTER
         ld e, a
 call_bdos_and_return:
-        call BDOS
+        call BDOS_ENTRY_POINT
         ret
+
 
 ;;; ***
 ;;; Show our usage-message, and terminate.
 ;;;
 no_arg:
         ld de, usage_message
-        ld c, 09
+        ld c, BDOS_OUTPUT_STRING
         jp call_bdos_and_return
-
-
 
 
 ;;; ***
