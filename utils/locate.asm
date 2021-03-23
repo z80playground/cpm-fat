@@ -10,7 +10,7 @@
 ;;
 ;;   A: Common / Globally useful
 ;;   B: BASIC programs.
-;;   C:
+;;   C: C (C)ompiler
 ;;   D:
 ;;   E:
 ;;   F:
@@ -23,7 +23,7 @@
 ;;   M
 ;;   N
 ;;   O
-;;   P: (P)rogramming related (turbo pascal, forth, etc)
+;;   P: Turbo (P)ascal
 ;;
 ;; But there are still times when you might forget, so you can run
 ;;
@@ -56,15 +56,8 @@ FCB:     EQU 0x005C
         ;; if the first character of that region is a space-character
         ;; then we've got nothing to search for.
         ld a, (FCB + 1)
-        cp 0x20                 ; 0x20 = 32 = SPACE Character
-        jp nz, real_start       ; Not a space? Go to the start of the program
-
-        ;; Show the error-message, and terminate.
-        ld de, usage_message
-        ld c, 09
-        call BDOS
-        ret
-
+        cp 0x20          ; 0x20 = 32 == SPACE
+        jp z, no_arg     ; Got a space, so we'll show usage-info and quit.
 
         ;; This is where we run our main loop, looping over the
         ;; drives from P->A.
@@ -95,9 +88,7 @@ find_loop:
 ;;;
 find_files_on_drive:
 
-        ;;
         ;; B is called with the drive-number, drop it into the FCB
-        ;;
         ld hl, FCB
         ld (hl),b
 
@@ -116,20 +107,19 @@ find_files_on_drive:
         ret z
 
 find_more:
-        ;; Show the thing we found.
+        ;; Show the thing we did find.
         call show_result
 
         ;; After the find-first function we need to keep calling
         ;; find-next, until that returns a failure.
-
         ld c,18                 ; call find-next
         ld de,FCB
         call BDOS
 
-        cp 255                  ; Nothing more found?  Then return.
+        cp 255                  ; Nothing found?  Then return
         ret z
 
-        jp find_more            ; Otherwise loop around again.
+        jp find_more            ; then loop around until we run out of matches
 
 
 
@@ -141,17 +131,17 @@ find_more:
 ;;; We show the drive-letter and the resulting match.
 ;;;
 show_result:
-        ;; output drive-letter
-        ld a,(FCB)
+
+        push af                 ; preserve return code from find first/next
+        ld a,(FCB)              ; output drive
         add a, 65
         call print_character
 
-        ;; output ":"
-        ld a, ':'
+        ld a, ':'               ; output ":"
         call print_character
 
-        ;; print the entry
-        call print_matching_filename
+        pop af                       ; restore return code from find first/next
+        call print_matching_filename ; print the entry
 
         ;; print newline
         ld de, newline
@@ -161,21 +151,35 @@ show_result:
 
 ;;; ***
 ;;;
-;;; When we call find-first/find-next we get a result,
-;;; We assume the default DMA address of 0x0080
+;;; When we call find-first/find-next we get a result which we now show.
 ;;;
-;;;          TODO / Fixme / Hacky
-;;;
-;;; I think the return code of the find-first/find-next should
-;;; be multiplied by 32, as per:
+;;; The return code of the find-first/next will be preserved when we're
+;;; called here, and it should be multiplied by 32, as per:
 ;;;
 ;;;    http://www.gaby.de/cpm/manuals/archive/cpm22htm/ch5.htm
 ;;;
 ;;; See documentation for "Function 17: Search for First "
 ;;;
+;;; NOTE: We assume the default DMA address of 0x0080
+;;;
 print_matching_filename
-        ld b, 11                ; number of characters?
-        LD hl, 0x0080 + 1       ; offset
+        ld b, 11                ; filename is 11 characters
+        LD hl, 0x0080 + 1       ; default DMA area.
+
+        ;; return code from find first/next should be multiplied by 32
+        AND 3               ; Mask the bits since ret is 0/1/2/3
+        ADD A,A             ;MULTIPLY...
+        ADD A,A             ;..BY 32 BECAUSE
+        ADD A,A             ;..EACH DIRECTORY
+        ADD A,A             ;..ENTRY IS 32
+        ADD A,A             ;..BYTES LONG
+
+        ;; hl = hl + a
+        add   a, l    ; A = A+L
+        ld    l, a    ; L = A+L
+        adc   a, h    ; A = A+L+H+carry
+        sub   l       ; A = H+carry
+        ld    h, a    ; H = H+carry
 
 print_matching_filename_loop:
         ld a,(hl)
@@ -195,15 +199,28 @@ print_matching_filename_loop:
 print_character:
         ld c, 0x02
         ld e, a
+call_bdos_and_return:
         call BDOS
         ret
+
+;;; ***
+;;; Show our usage-message, and terminate.
+;;;
+no_arg:
+        ld de, usage_message
+        ld c, 09
+        jp call_bdos_and_return
+
+
 
 
 ;;; ***
 ;;; The message displayed if no command-line argument was present.
 ;;;
 usage_message:
-        db "Usage: LOCATE pattern" ; fall-through :)
+        db "Usage: LOCATE pattern"
+
+        ;; note fall-through here :)
 newline:
         db 0xa, 0xd, "$"
 
