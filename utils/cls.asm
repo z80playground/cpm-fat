@@ -13,8 +13,8 @@ BDOS_OUTPUT_STRING:  EQU 9
 
         ld de, CLEAR_SCREEN_ANSI
         ld c, BDOS_OUTPUT_STRING
-        call BDOS_ENTRY_POINT
-        ret
+        jp BDOS_ENTRY_POINT
+
 
 CLEAR_SCREEN_ANSI:
         db 27, "[2J$"
