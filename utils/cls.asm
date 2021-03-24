@@ -2,12 +2,9 @@
 ;;
 ;; Clear the screen, via ANSI escape sequence.
 ;;
-BDOS_ENTRY_POINT:    EQU 5
 
-BDOS_OUTPUT_STRING:            EQU 9
-BDOS_SELECT_DISK:              EQU 14
-BDOS_FIND_FIRST:               EQU 17
-BDOS_FIND_NEXT:                EQU 18
+BDOS_ENTRY_POINT:    EQU 5
+BDOS_OUTPUT_STRING:  EQU 9
 
         ;;
         ;; CP/M programs start at 0x100.
@@ -19,11 +16,6 @@ BDOS_FIND_NEXT:                EQU 18
         call BDOS_ENTRY_POINT
         ret
 
-
-
-;;; ***
-;;; The message displayed if no command-line argument was present.
-;;;
 CLEAR_SCREEN_ANSI:
         db 27, "[2J$"
 
