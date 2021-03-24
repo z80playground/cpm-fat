@@ -98,4 +98,15 @@ Or:
   * Included is also a sample "hello.pas" file.
 * I've added Zork 1, 2, & 3 beneath [G:](dist/CPM/DISKS/G).
   * I've designated the `G:` drive as the game-drive, and moved other games there too.
-* To ease locating files I wrote `locate.com`, with source in [utils/](utils/).
+* I added a couple of simple utilities to [A:](dist/CPM/DISKS/A), with source beneath [utils/](utils/):
+  * `locate.com` - Find files matching a given pattern on **all** drives.
+  * `cls.com` - Clear the screen, by outputing an ANSI escape sequence.
+
+
+Future plans?
+
+* Optimize some of the assembly for size.
+  * Obvious easy-win is replacing instructions such as `ld b,0` with `xor b`.
+* Make a couple of minor changes to ccp:
+  * Would be nice to have command-history, accessible via `M-n`/`M-p`, or the arrow-keys.
+  * I added `cls.com`, it might make more sense to build that into the CCP-shell.
