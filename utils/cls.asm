@@ -17,6 +17,8 @@ BDOS_OUTPUT_STRING:  EQU 9
 
 
 CLEAR_SCREEN_ANSI:
-        db 27, "[2J$"
+        db 27, "[2J"            ; "clear"
+        db 27, "[H"             ; "home"
+        db "$"
 
         END
