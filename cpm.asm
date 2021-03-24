@@ -116,7 +116,7 @@ skip_over_int_and_nmi:
     call newline
     pop bc
 
-    ;call configure_uart                 ; Put these settings into the UART
+    call configure_uart                 ; Put these settings into the UART
     jp start_monitor
 
 failed_to_read_uart_config:

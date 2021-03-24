@@ -283,6 +283,8 @@ burn_y equ 39001
 burn_in_dump_area equ 39002
 
 burn_in:
+	call rom_off					; Needs to be off for ram-test to work
+	call user_toggle
 	call clear_screen
 	call message
 	db 'Starting BURN-IN test. This takes about 30 minutes.',13,10,0
@@ -309,22 +311,24 @@ draw_loop_x:
 
 	; Now main burn in loop
 
-	ld a, 2
+	ld a, 0
 	ld (burn_y), a				
 burn_in_loop_y:
-	ld a, 2
+	ld a, 0
 	ld (burn_x), a				
 burn_in_loop_x:
+	call full_ram_test
+	jp nz, burn_in_ram_error
 	call one_minute_burn_in
 	ld a, (burn_x)
 	inc a
 	ld (burn_x), a
-	cp 34
+	cp 32
 	jr nz, burn_in_loop_x
 	ld a, (burn_y)
 	inc a
 	ld (burn_y), a
-	cp 18
+	cp 16
 	jr nz, burn_in_loop_y
 
 	call newline
@@ -336,6 +340,31 @@ burn_in_wait:
 	jr z,burn_in_wait	
 	ret
 
+full_ram_test:
+	; Tests all of ram.
+	; Returns Z set if success.
+	ld hl, $FFFF 
+full_ram_test1:
+	ld b, (hl)
+
+	ld (hl), %01010101
+	ld a, (hl)
+	cp %01010101
+	ret nz
+
+	ld (hl), %10101010
+	ld a, (hl)
+	cp %10101010
+	ret nz
+
+	ld (hl), b
+	dec hl 
+	ld a, h
+	or l
+	jr nz, full_ram_test1
+    cp a                                ; set zero flag for success
+	ret
+
 one_minute_burn_in:
 	; set cursor position
     ld a, ESC
@@ -343,12 +372,12 @@ one_minute_burn_in:
     ld a, '['
     call print_a
     ld a, (burn_y)
-	inc a
+	add a, 3
     call print_a_as_decimal
     ld a, ';'
     call print_a
     ld a, (burn_x)
-	inc a
+	add a, 3
     call print_a_as_decimal
     ld a, 'H'
     call print_a
@@ -398,19 +427,9 @@ one_minute_burn_in:
 
 	call burn_in_write_file
 
-	ld b, 5
 burn_in_inner_loop:
-	push bc
-	call user_on
-	call long_pause
-	call user_off
-	call long_pause
-	call disk_on
-	call long_pause
-	call disk_off
-	call long_pause
-	pop bc
-	djnz burn_in_inner_loop
+	call user_toggle
+	call disk_toggle
 
 	call burn_in_read_file
 
@@ -471,6 +490,14 @@ burn_in_compare_loop:
 	inc hl
 	djnz burn_in_compare_loop
 	ret
+
+burn_in_ram_error:
+	call message
+	db 'RAM error at ',0
+	call show_hl_as_hex
+	call message
+	db 13,10,0
+	halt
 
 burn_in_compare_failed:
 	call message

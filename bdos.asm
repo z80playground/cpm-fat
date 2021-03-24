@@ -545,7 +545,7 @@ delete_error:
 
 BDOS_Read_Sequential:
     ; Pass in de -> FCB
-    ; Return a = 0 on success, or a = 255 on error
+    ; Return a = 0 on success, or a != 0 on error
     ; We need to read 128 bytes from the current position of the file referenced in FCB
     ; to DMA address.
     ; If there are less than 128 bytes, made sure the rest is padded with nulls.
