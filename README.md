@@ -5,7 +5,7 @@
   * [Bootloader](#bootloader)
 * [CP/M Binaries](#cpm-binaries)
   * [Additions](#additions)
-
+* [Future Plants?](#future-plans)
 
 # Overview
 
@@ -100,14 +100,14 @@ Or:
   * I've designated the `G:` drive as the game-drive, and moved other games there too.
 * I added a couple of simple utilities to [A:](dist/CPM/DISKS/A), with source beneath [utils/](utils/):
   * `locate.com`
-    * Find files matching a given pattern on **all** drives.
+    * Find files matching a given pattern on **all** drives:
       * `LOCATE *.COM`.
-    * or show all user-numbers which contain matches upon a signle drive
+    * or show all user-numbers which contain matches upon a single drive:
       * `LOCATE A:*.COM USER`.
   * `cls.com` - Clear the screen, by outputting an appropriate ANSI escape sequence.
 
 
-Future plans?
+# Future plans?
 
 * Optimize some of the assembly for size.
   * Obvious easy-win is replacing instructions such as `ld b,0` with `xor b`.
