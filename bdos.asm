@@ -698,7 +698,7 @@ BDOS_Rename_File:
     IF DEBUG_BDOS
     call show_bdos_message
 	call CORE_message
-	db 'Ren_File',13,10,0
+	db 'Ren',13,10,0
     ENDIF
 
     ld (store_source), de                               ; Store source FCB pointer for now
@@ -706,21 +706,24 @@ BDOS_Rename_File:
     call CORE_close_file                                ; just in case there is an open one.
     pop de
 
+    IF DEBUG_BDOS
     ; show source FCB
-    ; call CORE_message
-    ; db 'Source file:',13,10,0
-    ; call show_fcb
-
-    ; call CORE_message
-    ; db 'Target file:',13,10,0
+    call CORE_message
+    db 'Src:',13,10,0
+    call show_fcb
+    call CORE_message
+    db 'Tgt:',13,10,0
+    ENDIF
 
     ld hl, 16
     add hl, de
     ld (store_target), hl                               ; And store the target FCB for now
     ex de, hl                                           ; target is now in de
 
+    IF DEBUG_BDOS
     ; Show target FCB
-    ;call show_fcb
+    call show_fcb
+    ENDIF
 
     ; Check if target drive is "default", if so, copy from source.
     ld hl, (store_target)                           ; retrieve pointer to target file
