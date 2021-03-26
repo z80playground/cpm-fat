@@ -17,13 +17,17 @@
 ;; But there are still times when you might forget, so with this you
 ;; can run something like:
 ;;
-;;   A:LOCATE ZORK*.*
+;;   A:LOCATE ZORK*.* [USER]
 ;;
 ;; And this program will show you the matches, regardless of where
 ;; the files are.
 ;;
+;; If the second argument exists then instead of searching drives
+;; the script will search user-areas.
+;;
 
-FCB:     EQU 0x5C
+FCB1:    EQU 0x5C
+FCB2:    EQU 0x6C
 DMA:     EQU 0x80
 
 BDOS_ENTRY_POINT:    EQU 5
@@ -33,6 +37,7 @@ BDOS_OUTPUT_STRING:            EQU 9
 BDOS_SELECT_DISK:              EQU 14
 BDOS_FIND_FIRST:               EQU 17
 BDOS_FIND_NEXT:                EQU 18
+BDOS_GET_SET_USER_NUMBER:      EQU 32
 
         ;;
         ;; CP/M programs start at 0x100.
@@ -53,10 +58,45 @@ BDOS_FIND_NEXT:                EQU 18
         ;; The FCB will be populated with the pattern/first argument,
         ;; if the first character of that region is a space-character
         ;; then we've got nothing to search for.
-        ld a, (FCB + 1)
+        ld a, (FCB1 + 1)
         cp 0x20          ; 0x20 = 32 == SPACE
         jp z, no_arg     ; Got a space, so we'll show usage-info and quit.
 
+        ;; Are we looking for user-areas?
+        ld a, (FCB2 + 1)
+        cp 0x20
+        jp z, find_drives
+
+        ;; Set the flag which shows user-numbers in the output
+        ld hl, SHOW_USER_MARKER
+        ld (hl), a
+
+        ;; OK we're looking for files on the current drive, but with
+        ;; all user-numbers.
+        xor a                   ; user 0 first
+find_user_files:
+        ;; set user-number
+        push af
+        ld c, BDOS_GET_SET_USER_NUMBER
+        ld e, a
+        call BDOS_ENTRY_POINT
+
+        ;; Find files on the appropriate drive
+        ld a, (FCB1)
+        ld b, a
+
+        ;; find the files, and display them.
+        call find_files_on_drive
+
+        ;; repeat for all user-numbers
+        pop af
+        inc a
+        cp 16                   ; 15 user areas, if we hit 16 we've gone too far
+        jp nz, find_user_files
+        ret
+
+
+find_drives:
         ;; This is where we run our main loop, looping over the
         ;; drives from P->A.
         ;;
@@ -67,11 +107,6 @@ find_loop:
         call find_files_on_drive
         pop bc
         djnz find_loop
-
-        ;; At this point we've got our drive-letter in B, and it
-        ;; is zero - which terminated the loop.  But we should also
-        ;; look on that zero-drive
-        call find_files_on_drive
 
         ;; All done, exit now.
         ret
@@ -86,7 +121,7 @@ find_loop:
 find_files_on_drive:
 
         ;; B is called with the drive-number, drop it into the FCB
-        ld hl, FCB
+        ld hl, FCB1
         ld (hl),b
 
         ;; Select the disk, explicitly - not sure if this is required.
@@ -96,7 +131,7 @@ find_files_on_drive:
 
         ;; Call the find-first BIOS function
         ld c, BDOS_FIND_FIRST
-        ld de, FCB
+        ld de, FCB1
         call BDOS_ENTRY_POINT
 
 find_more:
@@ -110,7 +145,7 @@ find_more:
         ;; After the find-first function we need to keep calling
         ;; find-next, until that returns a failure.
         ld c, BDOS_FIND_NEXT
-        ld de, FCB
+        ld de, FCB1
         call BDOS_ENTRY_POINT
 
         jp find_more    ; Test return code and loop again
@@ -128,9 +163,19 @@ show_result:
 
         push af                 ; preserve return code from find first/next
 
-        ld a,(FCB)              ; Output the drive-letter and separator
-        add a, 65
+        ld a,(FCB1)             ; Output the drive-letter and separator
+        add a, 65 - 1
         call print_character
+
+        ld hl, SHOW_USER_MARKER
+        ld a, (hl)
+        cp 0
+        jp z, skip_user_number
+        ld c, 32                ; find user-number
+        ld e, 255
+        call BDOS_ENTRY_POINT
+        call OutHex8            ; output the number
+skip_user_number:
         ld a, ':'
         call print_character
 
@@ -223,6 +268,27 @@ no_arg:
 
 
 ;;; ***
+;;; Output the hex value of the 8-bit number stored in A
+;;;
+OutHex8:
+   rra
+   rra
+   rra
+   rra
+   call  Conv
+   ld  a,c
+Conv:
+   and  $0F
+   add  a,$90
+   daa
+   adc  a,$40
+   daa
+   ; Show the value.
+   ld c, BDOS_OUTPUT_SINGLE_CHARACTER
+   ld e, a
+   jp BDOS_ENTRY_POINT
+
+;;; ***
 ;;; The message displayed if no command-line argument was present.
 ;;;
 usage_message:
@@ -231,5 +297,10 @@ usage_message:
         ;; note fall-through here :)
 newline:
         db 0xa, 0xd, "$"
+
+;;; ***
+;;; If this is non-zero we skip showing the user-number
+;;;
+SHOW_USER_MARKER: db 0
 
         END
