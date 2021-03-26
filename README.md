@@ -5,7 +5,7 @@
   * [Bootloader](#bootloader)
 * [CP/M Binaries](#cpm-binaries)
   * [Additions](#additions)
-* [Future Plants?](#future-plans)
+* [Future Plans?](#future-plans)
 
 # Overview
 
