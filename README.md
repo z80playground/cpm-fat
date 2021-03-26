@@ -99,8 +99,12 @@ Or:
 * I've added Zork 1, 2, & 3 beneath [G:](dist/CPM/DISKS/G).
   * I've designated the `G:` drive as the game-drive, and moved other games there too.
 * I added a couple of simple utilities to [A:](dist/CPM/DISKS/A), with source beneath [utils/](utils/):
-  * `locate.com` - Find files matching a given pattern on **all** drives.
-  * `cls.com` - Clear the screen, by outputing an ANSI escape sequence.
+  * `locate.com`
+    * Find files matching a given pattern on **all** drives.
+      * `LOCATE *.COM`.
+    * or show all user-numbers which contain matches upon a signle drive
+      * `LOCATE A:*.COM USER`.
+  * `cls.com` - Clear the screen, by outputting an appropriate ANSI escape sequence.
 
 
 Future plans?
