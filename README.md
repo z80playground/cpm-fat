@@ -51,7 +51,7 @@ To get the system started there is a boot loader compiled and stored within the 
 
 * I wrote some simple notes on [updating the bootloader](FLASH.md).
 
-The bootloader runs a simple monitor and allows CP/M to be launched.  Launching CP/M involves reading [/CPM/cpm.cfg](dist/CPM/cpm.cfg) which contains the list objects to read into RAM, along with the addresses to which each should be loaded.  Once the files are loaded the system jumps to the CP/M entry-point.
+The bootloader runs a simple monitor and allows CP/M to be launched.  Launching CP/M involves reading [/CPM/cpm.cfg](dist/CPM/cpm.cfg) which contains the list objects to read into RAM, along with the addresses to which each should be loaded.  Once the files are loaded the system jumps into the monitor, from which you can launch CP/M, TinyBASIC, & etc.
 
 
 ## CP/M Binaries
