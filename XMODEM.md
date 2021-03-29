@@ -10,6 +10,9 @@ The source code for these two tools can be found here:
 * https://github.com/SmallRoomLabs/xmodem80/
   * **NOTE** The bugfix in [#2](https://github.com/SmallRoomLabs/xmodem80/issues/2) has been applied to the binaries included here.
 
+On your system you'll want to install the [lrzsz package](https://packages.debian.org/lrzsz)
+
+
 
 # Sending A File
 
@@ -22,7 +25,7 @@ Then run:
     a>xr foo
     CP/M XR - Xmodem receive v0.1 / SmallRoomLabs 2017
 
-Enter `Ctrl-a :` into your GNU Screen window, which will open the command-prompt, and then enter:
+Enter `Ctrl-a :` into your GNU Screen window, which will open the command-prompt, and then type:
 
     exec !! sx /etc/passwd
 
@@ -40,6 +43,3 @@ Now enter the GNU Screen prompt by prcessing `Ctrl-a :`, and enter the following
     exec !! rx /tmp/received
 
 Now `B:LINK.COM` will exist as `/tmp/received` upon your host.
-
-
-# Source Code
