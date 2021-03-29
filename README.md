@@ -98,6 +98,8 @@ Or:
 * I've added a copy of the Turbo Pascal compiler beneath [P:](dist/CPM/DISKS/P).
   * I wrote a simple [getting started with Turbo Pascal](TURBO.md) guide.
   * Included is also a sample "hello.pas" file.
+* I added `XR.COM` and `XS.COM` to send/receive files over a serial connection.
+  * Documented in [XMODEM.md](XMODEM.md)
 * I've added Zork 1, 2, & 3 beneath [G:](dist/CPM/DISKS/G).
   * I've designated the `G:` drive as the game-drive, and moved other games there too.
 * I added a couple of simple utilities to [A:](dist/CPM/DISKS/A), with source beneath [utils/](utils/):
