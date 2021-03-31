@@ -94,7 +94,7 @@ Or:
 
 ### Additions
 
-* Currently the source of the runtime system hasn't been changed, instead I've shuffled the various executables around for clarity.
+* Currently the source of the runtime system hasn't been changed, however I have shuffled the various executables around for clarity.
 * I've added a copy of the Turbo Pascal compiler beneath [P:](dist/CPM/DISKS/P).
   * I wrote a simple [getting started with Turbo Pascal](TURBO.md) guide.
   * Included is also a sample "hello.pas" file.
@@ -102,6 +102,9 @@ Or:
   * Documented in [XMODEM.md](XMODEM.md)
 * I've added Zork 1, 2, & 3 beneath [G:](dist/CPM/DISKS/G).
   * I've designated the `G:` drive as the game-drive, and moved other games there too.
+* I added `vi.com` to [A:](dist/CPM/DISKS/A).
+  * This was obtained from [https://github.com/udo-munk/s/](https://github.com/udo-munk/s/).
+  * While not a perfect version of `vi` it is pretty amazing considering.
 * I added a couple of simple utilities to [A:](dist/CPM/DISKS/A), with source beneath [utils/](utils/):
   * `locate.com`
     * Find files matching a given pattern on **all** drives:
