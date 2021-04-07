@@ -5,6 +5,7 @@
   * [Bootloader](#bootloader)
 * [CP/M Binaries](#cpm-binaries)
   * [Additions](#additions)
+* [Useful Links](#useful-links)
 * [Future Plans?](#future-plans)
 
 # Overview
@@ -112,6 +113,20 @@ Or:
     * or show all user-numbers which contain matches upon a single drive:
       * `LOCATE A:*.COM USER`.
   * `cls.com` - Clear the screen, by outputting an appropriate ANSI escape sequence.
+
+# Useful Links
+
+* CP/M help and information:
+  * [CP/M Commands](http://www.primrosebank.net/computers/cpm/cpm_commands.htm)
+* CP/M Software
+  * [Commercial CP/M Software Archive](http://www.retroarchive.org/cpm/index.html)
+  * [The HUMONGOUS CP/M Software Archives](http://cpmarchives.classiccmp.org/)
+* [WordStar Keyboard Bindings](http://www.wordstar.org/index.php/wsdos-documentation/wsdos-commands/108-wordstar-3-for-dos-commands-reference)
+
+This repository contains a copy of Turbo Pascal, along with a [guide to using it](TURBO.md), you can find a couple of simple games online here:
+
+* [Snake](https://github.com/linker3000/Z80-Board/blob/master/snake.pas)
+* [Quatris](https://web.archive.org/web/20080209232438/http://www.cirsovius.de/CPM/Projekte/Decompiler/QUATRIS/QUATRIS-PAS.txt) ("tetris")
 
 
 # Future plans?
