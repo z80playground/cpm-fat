@@ -186,6 +186,7 @@ skip_newline_on_last_row:
         CALL char_in                    ; Check for keypress
         AND A                           ;
         Jp Z,main_gofl_loop             ; Loop around again if no key
+        call GOFL_SCursor               ; Turn cursor back ok
         ret
 
 
