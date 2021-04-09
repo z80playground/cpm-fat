@@ -7,7 +7,7 @@
             "label": "CPM-HEX",
             "type": "process",
             "command": "pasmo",
-            "args": ["--hex", "cpm.asm", "cpm.hex", "cpm.symbols"],
+            "args": ["--hex", "cpm.asm", "cpm.hex"],
             "problemMatcher": [],
             "group": {
                 "kind": "build",
@@ -64,7 +64,7 @@
             "label": "CPM-BIN",
             "type": "process",
             "command": "pasmo",
-            "args": ["--bin", "cpm.asm", "cpm.bin", "cpm.symbols"],
+            "args": ["--bin", "cpm.asm", "cpm.bin"],
             "problemMatcher": [],
             "group": {
                 "kind": "build",
@@ -83,7 +83,7 @@
             "label": "CCP",
             "type": "process",
             "command": "pasmo",
-            "args": ["--bin", "ccp.asm", "ccp.bin", "ccp.symbols"],
+            "args": ["--bin", "ccp.asm", "ccp.bin"],
             "problemMatcher": [],
             "group": {
                 "kind": "build",
@@ -102,7 +102,7 @@
             "label": "BDOS",
             "type": "process",
             "command": "pasmo",
-            "args": ["--bin", "bdos.asm", "bdos.bin", "bdos.symbols"],
+            "args": ["--bin", "bdos.asm", "bdos.bin"],
             "problemMatcher": [],
             "group": {
                 "kind": "build",
