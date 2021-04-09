@@ -283,10 +283,10 @@ dir_info_read:
     call read_data_bytes_into_buffer
     cp $20                              ; Must have read 32 bytes
     ret nz                              ; or else it is an error
-    ;call message
-    ;db 'Read this many bytes: ',0
-    ;call show_a_as_hex
-    ;call newline
+;     call message
+;     db 'Read this many bytes: ',0
+;     call show_a_as_hex
+;     call newline
 
 ;     ld b, $20
 ;     ld hl, disk_buffer
@@ -294,7 +294,7 @@ dir_info_read:
 ;     ld a, (hl)
 ;     push hl
 ;     push bc
-;     call print_a
+;     call show_a_as_hex
 ;     ld a, ','
 ;     call print_a
 ;     pop bc
@@ -318,7 +318,7 @@ dir_info_write:
     call read_status_byte
     ;call report_on_status
     cp USB_INT_SUCCESS
-    ret nz
+    jr nz, dir_info_write2
 
     ld a, WR_OFS_DATA
     call send_command_byte
@@ -342,6 +342,9 @@ dir_info_write1:
     call send_command_byte
     call read_data_byte
     ;call report_on_status
+    ret
+
+dir_info_write2:
     ret
 
 ;----------------------------------
@@ -375,16 +378,16 @@ write_loop
     cp 0
     jr z, write_finished
 
-    ;push hl
-    ;push af
-    ;call message
-    ;db 'Bytes to send: ',0
-    ;pop af
-    ;push af
-    ;call show_a_as_hex
-    ;call newline
-    ;pop af
-    ;pop hl
+    ; push hl
+    ; push af
+    ; call message
+    ; db 'Bytes to send: ',0
+    ; pop af
+    ; push af
+    ; call show_a_as_hex
+    ; call newline
+    ; pop af
+    ; pop hl
 
     ld b, a
 block_loop:
@@ -558,15 +561,12 @@ move_to_file_pointer:
     call send_data_byte
     call read_status_byte
     cp USB_INT_SUCCESS
-    jr nz, byte_locate_fail                 ; We expect USB_INT_SUCCESS here
+    jr nz, move_to_file_pointer_fail        ; We expect USB_INT_SUCCESS here
 
     ld a, USB_INT_SUCCESS                   ; Return success
     ret
 move_to_file_pointer_fail:
     ld a, USB_INT_DISK_ERR                  ; Return fail
-    ret
-
-byte_locate_fail:
     ret
 
 set_random_pointer_in_fcb:
