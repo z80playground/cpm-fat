@@ -25,7 +25,9 @@ bdos_entry:
 
     cp $66                      ; 102 = BDOS_Get_Date_Time
     jr z, return_255_in_a
-
+    cp $69                      ; BDOS function 69 - Get configuration table address
+    jr z, return_255_in_a       ; is supported by CP/Net, so ignore it here.
+    
     call CORE_message
     db 'BAD BDOS CALL: ',0
     ld l, c
