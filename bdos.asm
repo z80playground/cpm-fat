@@ -5,9 +5,13 @@ include "core_jump.asm"
 
     org BDOS_START
 
-    ; BDOS size is 2.5K
+    ; BDOS size is 2.5K max. If it exceeds this there will be problems!
+    ; See the end of the file for a Pasmo Error Check to ensure this isn't allowed to happen.
+    ; It is most likely to happen if you enable debug mode and have lots of extra debug messages in play.
 
 DEBUG_BDOS equ 0
+OTHER_DEBUG equ 0
+
 
 bdos_entry:
     ; The function number is passed in Register C.
@@ -64,11 +68,11 @@ show_bdos_message:
     ret
 
 BDOS_System_Reset:
-    IF DEBUG_BDOS
-    call show_bdos_message
-	call CORE_message
-	db 'reset',13,10,0
-    ENDIF
+    ; IF DEBUG_BDOS
+    ; call show_bdos_message
+	; call CORE_message
+	; db 'RST',13,10,0
+    ; ENDIF
 
     call clear_current_fcb                          ; Clear the Current_fcb
     jp $0000
@@ -232,7 +236,7 @@ BDOS_Reset_Disk_System:
     if DEBUG_BDOS
     call show_bdos_message
 	call CORE_message
-	db 'Rst_Disks',13,10,0
+	db 'Rst_Dsk',13,10,0
     ENDIF
 
     call clear_current_fcb                          ; Clear out current FCB
@@ -247,12 +251,15 @@ BDOS_Select_Disk:
     if DEBUG_BDOS
     call show_bdos_message
 	call CORE_message
-	db 'Sel_Disk ',0
+	db 'Sel_Dsk ',0
     ENDIF
+
+    call CORE_close_file                            ; If we are changing disks, we need to close any files
 
     ; Disk is in "E". 0 = A:, 15 = P:
     ld a, e
-    and %00001111                                           ; Make sure desired disk is in range 0..15
+    cp 16                                                   ; Make sure desired disk is in range 0..15
+    jr nc, BDOS_Select_Disk_Error
     ld (current_disk), a                                    ; Store disk
 
     ; Now check that directory actually exists, and if not, make it
@@ -305,6 +312,16 @@ BDOS_Select_Disk_User_ok:
     call clear_current_fcb                          ; Clear out current FCB
 	jp return_0_in_a
 
+BDOS_Select_Disk_Error:
+    call CORE_message
+    db 'BDOS Error on ',0
+    add a, 'A'
+    call CORE_print_a
+    ld a, ':'
+    call CORE_print_a
+    call CORE_newline
+    jp 0
+
 BDOS_Open_File:
     ; Pass in de -> FCB
     ; return a = 0 for success, a = 255 for error.
@@ -313,7 +330,7 @@ BDOS_Open_File:
     if DEBUG_BDOS
     call show_bdos_message
 	call CORE_message
-	db 'Open_File',13,10,0
+	db 'Open',13,10,0
     call show_fcb
     ENDIF
 
@@ -420,7 +437,7 @@ BDOS_Search_for_First:
     IF DEBUG_BDOS
     call show_bdos_message
 	call CORE_message
-	db 'Search_Fst',13,10,0
+	db 'Srch_Fst',13,10,0
     call show_fcb
     ENDIF
 
@@ -442,7 +459,7 @@ BDOS_Search_for_First:
 search_first_found:
     IF DEBUG_BDOS
     call CORE_message
-    db 'DIR ret:',13,10,0
+    db 'DIR:',13,10,0
     ld de, (dma_address)
     call show_fcb
     ENDIF
@@ -453,7 +470,7 @@ BDOS_Search_for_Next:
     IF DEBUG_BDOS
     call show_bdos_message
 	call CORE_message
-	db 'Search_Nxt',13,10,0
+	db 'Srch_Nx',13,10,0
     ENDIF
 
     ld de, (dma_address)
@@ -464,7 +481,7 @@ BDOS_Search_for_Next:
 
     IF DEBUG_BDOS
     call CORE_message
-    db 'NEXT NONE',13,10,0
+    db 'NONE!',13,10,0
     ENDIF
 
     jp return_255_in_a                          ; Found nothing
@@ -487,8 +504,7 @@ BDOS_Delete_File:
     IF DEBUG_BDOS
     call show_bdos_message
 	call CORE_message
-	db 'Del_File',13,10,0
-    call show_fcb
+	db 'Del',13,10,0
     ENDIF
 
     ; We enter with DE pointing to a FCB, such as "file.xyz" or "*.txt".
@@ -523,6 +539,7 @@ BDOS_Delete_File:
     ld de, temp_fcb
     call copy_fcb_to_filename_buffer
     call CORE_close_file                            ; just in case there is an open one.
+    call clear_current_fcb
     call open_cpm_disk_directory
 
     ld hl, filename_buffer+2                        ; Specify filename
@@ -556,7 +573,7 @@ BDOS_Read_Sequential:
     IF DEBUG_BDOS
     call show_bdos_message
 	call CORE_message
-	db 'Read_Seq',13,10,0
+	db 'Rd_Seq',13,10,0
     call show_fcb    
     ENDIF
 
@@ -609,7 +626,7 @@ BDOS_Write_Sequential:
     IF DEBUG_BDOS
     call show_bdos_message
 	call CORE_message
-	db 'Write_Sequential',13,10,0
+	db 'Wr_Seq',13,10,0
     call show_fcb
     ENDIF
 
@@ -626,7 +643,7 @@ dont_turn_on:
     ; Now jump to the right place in the file
     call get_file_pointer_from_fcb              ; bcde = file pointer
     call multiply_bcde_by_128                   ; bcde = byte location in file
-    call CORE_move_to_file_pointer                   ; move to that location
+    call CORE_move_to_file_pointer              ; move to that location
     cp USB_INT_SUCCESS
     jr nz, BDOS_Write_Sequential_fail
 BDOS_Write_Sequential1:
@@ -644,6 +661,9 @@ BDOS_Write_Sequential1:
     jp return_0_in_a
 
 BDOS_Write_Sequential_fail:
+    pop de
+    call CORE_message
+    db 'BDOS write error!',13,10,0
     call CORE_disk_off
     jp return_255_in_a
 
@@ -698,7 +718,7 @@ BDOS_Rename_File:
     IF DEBUG_BDOS
     call show_bdos_message
 	call CORE_message
-	db 'Ren_File',13,10,0
+	db 'Ren',13,10,0
     ENDIF
 
     ld (store_source), de                               ; Store source FCB pointer for now
@@ -706,21 +726,24 @@ BDOS_Rename_File:
     call CORE_close_file                                ; just in case there is an open one.
     pop de
 
+    IF DEBUG_BDOS
     ; show source FCB
-    ; call CORE_message
-    ; db 'Source file:',13,10,0
-    ; call show_fcb
-
-    ; call CORE_message
-    ; db 'Target file:',13,10,0
+    call CORE_message
+    db 'Src:',13,10,0
+    call show_fcb
+    call CORE_message
+    db 'Tgt:',13,10,0
+    ENDIF
 
     ld hl, 16
     add hl, de
     ld (store_target), hl                               ; And store the target FCB for now
     ex de, hl                                           ; target is now in de
 
+    IF DEBUG_BDOS
     ; Show target FCB
-    ;call show_fcb
+    call show_fcb
+    ENDIF
 
     ; Check if target drive is "default", if so, copy from source.
     ld hl, (store_target)                           ; retrieve pointer to target file
@@ -749,8 +772,10 @@ BDOS_Rename_target_not_default:
 
 BDOS_Rename_File_same_drives:
     ; Open the source file.
+    call CORE_close_file
     ld de, (store_source)
     call copy_fcb_to_filename_buffer
+    call open_cpm_disk_directory
     ld hl, filename_buffer+2                        ; Specify source filename
     call CORE_open_file
     jp nz, BDOS_Rename_File_no_source
@@ -773,8 +798,6 @@ BDOS_Rename_File_same_drives:
     call CORE_close_file
 
     call clear_current_fcb                          ; Clear out current FCB
-    ;call CORE_message
-    ;db '[YAY!]',13,10,0
     jp return_0_in_a                                ; success
 BDOS_Rename_File_exists:
     ;call CORE_message
@@ -830,11 +853,11 @@ BDOS_Set_DMA_Address:
     jp return_0_in_a
 
 BDOS_Get_Addr_Alloc:
-    IF DEBUG_BDOS
-    call show_bdos_message
-	call CORE_message
-	db 'Get_DSKALLOC',13,10,0
-    ENDIF
+    ; IF DEBUG_BDOS
+    ; call show_bdos_message
+	; call CORE_message
+	; db 'Get_DSKAL',13,10,0
+    ; ENDIF
 
     ld hl, DISKALLOC
     ld a, l 
@@ -941,7 +964,7 @@ BDOS_Write_Random:
     IF DEBUG_BDOS
     call show_bdos_message
 	call CORE_message
-	db 'Write_Rand',13,10,0
+	db 'Wr_Rand',13,10,0
     ENDIF
 BDOS_Write_Random1:    
     push de                                         ; store FCB for now
@@ -1004,13 +1027,13 @@ BDOS_Compute_File_Size:
     push de                                         ; Store source FCB pointer for now
     call CORE_close_file                                 ; just in case there is an open one.
 
-    IF DEBUG_BDOS
-    call CORE_message
-    db 'Compute File Size Source file:',13,10,0
-    pop de
-    push de
-    call show_fcb
-    ENDIF
+    ; IF DEBUG_BDOS
+    ; call CORE_message
+    ; db 'Compute File Size Source file:',13,10,0
+    ; pop de
+    ; push de
+    ; call show_fcb
+    ; ENDIF
 
     call copy_fcb_to_filename_buffer
 
@@ -1062,25 +1085,33 @@ BDOS_Compute_File_Size_not_exist:
 
 BDOS_Set_Random_Record:
     IF DEBUG_BDOS
+    push de
     call show_bdos_message
 	call CORE_message
-	db 'Set_Rand_Rec',13,10,0
+	db 'Set_Rnd_Rc',13,10,0
+    call show_fcb
     ENDIF
 
     ; Set the random record count bytes of the FCB to the number of the last record read/written by the sequential I/O calls.
     ; FCB is in DE
     push de
-    call get_file_pointer_from_fcb      ; gets sequential pointer into bcde
-    ex de, hl                           ; Lowest 16 bits of pointer go into hl
+    call get_file_pointer_from_fcb          ; gets sequential pointer into bcde
+    ex de, hl                               ; Lowest 16 bits of pointer go into hl
     pop de
-    call CORE_set_random_pointer_in_fcb      ; Store hl into random pointer
+    call CORE_set_random_pointer_in_fcb     ; Store hl into random pointer
+
+    IF DEBUG_BDOS
+    pop de
+    call show_fcb
+    ENDIF
+
     jp return_1_in_a
 
 BDOS_Reset_Drive:
     IF DEBUG_BDOS
     call show_bdos_message
 	call CORE_message
-	db 'Rst_Drv',13,10,0
+	db 'Rst_Dr',13,10,0
     ENDIF
 
     call clear_current_fcb                          ; Clear out current FCB
@@ -1102,7 +1133,7 @@ BDOS_Write_Random_Zero_Fill:
     IF DEBUG_BDOS
     call show_bdos_message
 	call CORE_message
-	db 'Write_Rand_0',13,10,0
+	db 'Wr_0',13,10,0
     ENDIF
 
     jp BDOS_Write_Random1
@@ -1117,7 +1148,7 @@ BDOS_ERROR_MODE:
     IF DEBUG_BDOS
     call show_bdos_message
 	call CORE_message
-	db 'Err_Mod',13,10,0
+	db 'Er',13,10,0
     ENDIF
     ret
 
@@ -1482,7 +1513,7 @@ show_fcb:
 
 show_fcb1:
     call CORE_message
-    db 'dflt: ',0
+    db '-: ',0
 show_fcb2:
     ; Show filename
     ld b, 8
@@ -1508,10 +1539,10 @@ show_fcb_end:
 
     call get_file_pointer_from_fcb              ; info comes back in bcde
     call CORE_message
-    db ', ptr: ',0
+    db ', pt: ',0
     call show_bcde_as_hex
     call CORE_message
-    db ', rand: ',0
+    db ', rn: ',0
     pop de
     push de
     call get_random_pointer_from_fcb            ; Gets the random record pointer in hl
@@ -1804,4 +1835,10 @@ store_target:
 ; TODO these should only live in the CORE.
 YES_OPEN_DIR equ $41
 USB_INT_SUCCESS equ $14
+
+BDOS_END equ $
+
+IF BDOS_END-BDOS_START>2560
+    .WARNING "The BDOS is too big! 2560 bytes max!"
+ENDIF
 
