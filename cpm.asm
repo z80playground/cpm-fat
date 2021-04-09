@@ -84,6 +84,8 @@ skip_over_int_and_nmi:
     ld a, $FF 
     ld (baud_rate_divisor), a           ; Reset the two UART parameters
     ld (flow_control_value), a
+    ld a, 0
+    ld (auto_run_char), a               ; Reset the auto-run character
     ld hl, UART_CFG_NAME
     call load_config_file
     call parse_uart_config_file         ; this gets b=baud and c=flowcontrol
@@ -117,6 +119,15 @@ skip_over_int_and_nmi:
     pop bc
 
     call configure_uart                 ; Put these settings into the UART
+
+    ; Report on the AUTO-RUN-CHAR and start the monitor
+    ld a, (auto_run_char)
+    cp 0
+    jp z, start_monitor
+    call message
+    db 'AUTO ',0
+    call show_a_safe
+    call newline
     jp start_monitor
 
 failed_to_read_uart_config:
@@ -303,7 +314,8 @@ parse_uart_config_file:
     ; Go through the config file one line at a time.
     ; If we encounter a \0 then the file has ended.
     ; If a line starts with ";" then ignore it.
-    ; If a line starts with "BAUD" or "FLOW" then read in the hex value
+    ; If a line starts with "BAUD" or "FLOW" then read in the hex value.
+    ; If a line starts with "AUTO" then read in a char.
     ld hl, config_file_loc
 parse_uart_config_file_loop:
     call has_file_ended
@@ -323,6 +335,14 @@ consume_uart_value:
     call go_to_next_line
     jr parse_uart_config_file_loop
 
+consume_char:
+    ; hl points to the char in the file
+    ; de points to where we want to store it
+    call parse_char
+    call go_to_next_line
+    jr parse_uart_config_file_loop
+
+
 not_baud_rate:
     call is_this_line_the_flow_control
     jr nz, not_flow_control
@@ -330,6 +350,12 @@ not_baud_rate:
     jr consume_uart_value
 
 not_flow_control:
+    call is_this_line_the_auto_char
+    jr nz, not_auto_char
+    ld de, auto_run_char
+    jr consume_char
+
+not_auto_char:
     ; Unknown line so ignore it
     call go_to_next_line
     jp parse_uart_config_file_loop
@@ -377,6 +403,17 @@ parse_4_digit_hex_value:
     add a, b
     ld (de), a                              ; Stored all of low byte now
 
+    ret
+
+parse_char:
+    ld a, (hl)
+    cp 32
+    jr c, parse_char_blank
+    ld (de), a
+    ret
+parse_char_blank:
+    ld a, 0
+    ld (de), a
     ret
 
 parse_2_digit_hex_value:
@@ -518,6 +555,33 @@ is_this_line_the_flow_control:
 
     call get_cfg_char
     cp 'W'
+    jp nz, is_this_line_NO
+
+    call get_cfg_char
+    cp ' '
+    jp nz, is_this_line_NO
+    pop de                          ; throw away the value we pushed
+    ret                             ; returns Z
+
+is_this_line_the_auto_char:
+    ; Checks if the line starts with "AUTO"
+    ; Returns Z if so and leaves hl pointing to the start of the address after the word.
+    ; If not returns NZ and leaves hl pointing to the start of the line
+    push hl
+    call get_cfg_char
+    cp 'A'
+    jp nz, is_this_line_NO
+
+    call get_cfg_char
+    cp 'U'
+    jp nz, is_this_line_NO
+
+    call get_cfg_char
+    cp 'T'
+    jp nz, is_this_line_NO
+
+    call get_cfg_char
+    cp 'O'
     jp nz, is_this_line_NO
 
     call get_cfg_char
@@ -778,6 +842,7 @@ dma_address:
     ds 2
 
 config_file_loc equ $9000
+auto_run_char equ $8FFF
 
 filename_buffer equ 65535-20
 DRIVE_NAME equ filename_buffer-2
