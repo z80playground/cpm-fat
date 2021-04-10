@@ -35,7 +35,7 @@ The source code available here is made of a couple of different files:
 
 * [core.asm](core.asm) - The core routines for accessing the hardware.
 * [bios.asm](bios.asm) - A stub of a CP/M BIOS.
-* [bdos.asm](bdos.asm) - My implementation of the CP/M BDOS.
+* [bdos.asm](bdos.asm) - Implementation of the CP/M BDOS, as written by [John](https://github.com/z80playground).
 * [ccp.asm](ccp.asm) - The standard Digital Research CCP.
 
 You can compile these via the `pasmo` compiler, or look at the latest versions upon our [releases page](https://github.com/skx/cpm-fat/releases).  If you have `make` and `pasmo` installed you can generate the compiled versions via:
