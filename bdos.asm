@@ -12,7 +12,6 @@ include "core_jump.asm"
 DEBUG_BDOS equ 0
 OTHER_DEBUG equ 0
 
-
 bdos_entry:
     ; The function number is passed in Register C.
     ; The parameter is passed in DE.
@@ -27,7 +26,7 @@ bdos_entry:
     jr z, return_255_in_a
     cp $69                      ; BDOS function 69 - Get configuration table address
     jr z, return_255_in_a       ; is supported by CP/Net, so ignore it here.
-    
+
     call CORE_message
     db 'BAD BDOS CALL: ',0
     ld l, c
@@ -503,10 +502,11 @@ BDOS_Delete_File:
     ; Returns a = 0 for success and a = 255 for failure.
     ; I think that we return 0 if we delete a file, and 255 if we don't, even though
     ; that is not exactly an error condition.
-    IF DEBUG_BDOS
+    IF OTHER_DEBUG
     call show_bdos_message
 	call CORE_message
 	db 'Del',13,10,0
+    call show_fcb
     ENDIF
 
     ; We enter with DE pointing to a FCB, such as "file.xyz" or "*.txt".
@@ -517,6 +517,10 @@ BDOS_Delete_File:
 
     ld a, 255
     ld (delete_flag), a                             ; Store the result
+
+    ; Store drive letter of requested file to delete
+    ld a, (de)
+    ld (store_source), a
 
     ; Do a DIR-search-first, using the fcb passed in DE
     push de
@@ -534,9 +538,19 @@ BDOS_Delete_File:
     jr z, BDOS_Delete_File_done
 
     ; File found, so delete it
-
     ld a, 0
     ld (delete_flag), a                             ; Store a success reult
+
+    ; restore the drive letter saved from the originally requested file
+    ld a, (store_source)
+    ld (temp_fcb), a
+
+    IF OTHER_DEBUG
+    call CORE_message
+    db 'DELETING ',13,10,0
+    ld de, temp_fcb
+    call show_fcb
+    ENDIF
 
     ld de, temp_fcb
     call copy_fcb_to_filename_buffer
@@ -554,6 +568,12 @@ BDOS_Delete_File:
 
 BDOS_Delete_File_done:
     pop de
+
+    IF OTHER_DEBUG
+    call CORE_message
+    db 'DEL done',13,10,0
+    ENDIF
+
     ld a, (delete_flag)
     ld b, 0
 	ret
