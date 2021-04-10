@@ -8,11 +8,17 @@ monitor_restart:
 	call clear_screen
 	call show_welcome_message
 
+	; If there is an auto-run-character defined, use that instead of a key press.
+	ld a, (auto_run_char)
+	cp 0
+	jr nz, monitor_loop2
+
 monitor_loop:
 	ld a, '>'
 	call print_a
 monitor_loop1:
 	call char_in			; get a char from keyboard
+monitor_loop2:
 	cp 0					; If it's null, ignore it
 	jr z,monitor_loop1
 	cp '0'					; '0' = go to page 0
