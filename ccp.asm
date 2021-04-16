@@ -141,10 +141,31 @@ OPEN:	LD	C,15
 ;
 ;   Routine to open file at (FCB).
 ;
+;   This is used either for loading-files, or for finding files for TYPE
+;
 OPENFCB:XOR	A		;clear the record number byte at fcb+32
 	LD	(FCB+32),A
 	LD	DE,FCB
-	JP	OPEN
+	LD      C,15
+        CALL    ENTRY
+	LD	(RTNCODE),A	;save return code.
+	INC	A		;set zero if 0ffh returned.
+        JP      NZ,OPEN_OK      ;no error finding the file.
+
+        ;; ok open failed, try again with A:, just in case that helps
+        LD A,1
+        LD (CHGDRV),A
+        CALL    DSELECT
+
+        LD	DE,FCB
+	LD      C,15
+        CALL    ENTRY
+	LD	(RTNCODE),A	;save return code.
+	INC	A		;set zero if 0ffh returned.
+OPEN_OK:
+        RET
+
+
 ;
 ;   Routine to close a file. (DE) points to FCB.
 ;
@@ -1762,6 +1783,3 @@ CDRIVE:	DEFB	0		;currently active drive.
 CHGDRV:	DEFB	0		;change in drives flag (0=no change).
 NBYTES:	DEFW	0		;byte counter used by TYPE.
 ;
-
-
-
