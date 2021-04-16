@@ -99,6 +99,9 @@ I have _mostly_ shuffled the various executables around for clarity, and added s
 
 In terms of new features to the system-core I have patched the CCP (command-processor) component of CP/M to look for failed files upon the A: drive if they're not found in the named/current drive.
 
+* Addition of "search path"
+  * #12
+
 Otherwise changes are only shuffling and the addition of new binaries, as noted:
 
 * I've added a copy of DX Forth beneath [F:](dist/CPM/DISKS/F).
