@@ -67,7 +67,7 @@ CP/M doesn't have the concept of sub-directories, so all files are arranged at t
 | A:     | All general-purpose utilities.  |
 | B:     | BASIC Code and interpreter.     |
 | C:     | AzTec C Compiler/Linker               |
-| D:     | Wordstar files?  [TODO: Move]   |
+| D:     |                                 |
 | E:     | Editor - WordStar               |
 | F:     | Z80 FORTH [TODO]                |
 | G:     | Games - all types               |
@@ -113,6 +113,8 @@ Or:
     * or show all user-numbers which contain matches upon a single drive:
       * `LOCATE A:*.COM USER`.
   * `cls.com` - Clear the screen, by outputting an appropriate ANSI escape sequence.
+* I removed duplicate file-contents from various drives.
+
 
 # Useful Links
 
