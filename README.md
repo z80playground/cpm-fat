@@ -107,12 +107,15 @@ Or:
   * This was obtained from [https://github.com/udo-munk/s/](https://github.com/udo-munk/s/).
   * While not a perfect version of `vi` it is pretty amazing considering.
 * I added a couple of simple utilities to [A:](dist/CPM/DISKS/A), with source beneath [utils/](utils/):
+  * `cls.com` - Clear the screen, by outputting an appropriate ANSI escape sequence.
   * `locate.com`
     * Find files matching a given pattern on **all** drives:
       * `LOCATE *.COM`.
     * or show all user-numbers which contain matches upon a single drive:
       * `LOCATE A:*.COM USER`.
-  * `cls.com` - Clear the screen, by outputting an appropriate ANSI escape sequence.
+  * `monitor.asm`
+    * Jump back to the monitor, from within the CP/M environment.
+    * Essentially page in the ROM, then reboot.
 * I removed duplicate file-contents from various drives.
 
 
