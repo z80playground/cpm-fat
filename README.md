@@ -69,7 +69,7 @@ CP/M doesn't have the concept of sub-directories, so all files are arranged at t
 | C:     | AzTec C Compiler                |
 | D:     |                                 |
 | E:     | Editor - WordStar               |
-| F:     |                                 |
+| F:     | FORTH - DxForth                 |
 | G:     | Games - all types               |
 | H:     |                                 |
 | I:     |                                 |
@@ -96,6 +96,7 @@ Or:
 ### Additions
 
 * Currently the source of the runtime system hasn't been changed, however I have shuffled the various executables around for clarity.
+* I've added a copy of DX Forth beneath [F:](dist/CPM/DISKS/F).
 * I've added a copy of the Turbo Pascal compiler beneath [P:](dist/CPM/DISKS/P).
   * I wrote a simple [getting started with Turbo Pascal](TURBO.md) guide.
   * Included is also a sample "hello.pas" file.
