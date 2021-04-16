@@ -66,10 +66,10 @@ CP/M doesn't have the concept of sub-directories, so all files are arranged at t
 | ------ | ------------------------------- |
 | A:     | All general-purpose utilities.  |
 | B:     | BASIC Code and interpreter.     |
-| C:     | AzTec C Compiler/Linker               |
+| C:     | AzTec C Compiler                |
 | D:     |                                 |
 | E:     | Editor - WordStar               |
-| F:     | Z80 FORTH [TODO]                |
+| F:     |                                 |
 | G:     | Games - all types               |
 | H:     |                                 |
 | I:     |                                 |
@@ -79,7 +79,7 @@ CP/M doesn't have the concept of sub-directories, so all files are arranged at t
 | M:     |                                 |
 | N:     |                                 |
 | O:     |                                 |
-| P:     | Tturbo Pascal 3.00A             |
+| P:     | Turbo Pascal 3.00A              |
 
 To look at the list of games, for example, you'll run something like this:
 
