@@ -95,7 +95,12 @@ Or:
 
 ### Additions
 
-* Currently the source of the runtime system hasn't been changed, however I have shuffled the various executables around for clarity.
+I have _mostly_ shuffled the various executables around for clarity, and added some new things to the file-tree located beneath [dist/](dist/).
+
+In terms of new features to the system-core I have patched the CCP (command-processor) component of CP/M to look for failed files upon the A: drive if they're not found in the named/current drive.
+
+Otherwise changes are only shuffling and the addition of new binaries, as noted:
+
 * I've added a copy of DX Forth beneath [F:](dist/CPM/DISKS/F).
 * I've added a copy of the Turbo Pascal compiler beneath [P:](dist/CPM/DISKS/P).
   * I wrote a simple [getting started with Turbo Pascal](TURBO.md) guide.
