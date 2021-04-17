@@ -114,6 +114,8 @@ Now configure things to look for unknown commands on the A: drive, confirming th
 
 I've removed the undocumented (imp)ort and (exp)ort commands, to cut down on space, and avoid confusion.
 
+Although I'd like to improve the console input functions, for the moment I've just updated things such that the backspace key deletes the most recently entered character at the CP/M prompt.  (This is in addition to the keystroke `C-h` continuing to work in that same way.)
+
 Possible future changes might involve:
 
 * Optimize for size.
