@@ -197,10 +197,12 @@ BDOS_Read_Console_Buffer1:
     pop hl
     cp 13                       ; Done?
     jr z, BDOS_Read_Console_Buffer2
-    cp 8                        ; Backspace key?
+    cp 8                        ; Ctrl-H key?
     jr z, BDOS_Read_Console_Buffer_Backspace
-    cp 127
+    cp 127                      ; Backspace
     jr z, BDOS_Read_Console_Buffer_Backspace
+    cp 3
+    jr z,BDOS_Read_Console_Clear_Line ; ctrl-c -> reset line
     ld (de), a                  ; Store the char in the buffer
     inc (hl)                    ; Increase the final-chars-count
     inc de                      ; Move on to next place in buffer
@@ -208,7 +210,15 @@ BDOS_Read_Console_Buffer1:
     djnz  BDOS_Read_Console_Buffer1
 BDOS_Read_Console_Buffer2:
     ld b, 0
-	ret
+    ret
+
+BDOS_Read_Console_Clear_Line:
+        ld (hl),0                   ; zero characters entered
+        inc hl
+        ld (hl),0               ; first character is a null
+        ld b,0
+        ret
+
 BDOS_Read_Console_Buffer_Backspace:
     ld a, (hl)                  ; If final-chars is zero we can't go back any more
     cp 0
