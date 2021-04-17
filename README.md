@@ -95,7 +95,7 @@ Or:
 
 ### CP/M System Changes
 
-In terms of new features to the system-core I have patched the CCP (command-processor) component of CP/M to add a naive "search path".  This allows commands to be executed from a different drive if not found in the present one.
+In terms of changing the system-core I have patched the CCP (command-processor) component of CP/M to add a naive "search path".  This allows commands to be executed from a different drive if not found in the present one.
 
 By default no search drive is set:
 
@@ -112,11 +112,15 @@ Now configure things to look for unknown commands on the A: drive, confirming th
      B>cls
      [ screen clears ]
 
+I've removed the undocumented (imp)ort and (exp)ort commands, to cut down on space, and avoid confusion.
+
 Possible future changes might involve:
 
-* Drop the arduino support
-* Look at `message.asm`
 * Optimize for size.
+  * There are some simple changes which could be applied automatically.
+  * For example replacing "`ld b,0`" with `xor b`.
+* Look at `message.asm`
+  * Which is a bit of a messy piece of code.
 
 
 ### CP/M Binaries
