@@ -3,8 +3,9 @@
 * [Contents](#contents)
 * [Source Code](#source-code)
   * [Bootloader](#bootloader)
-* [CP/M Binaries](#cpm-binaries)
-  * [Additions](#additions)
+* [CP/M Distribution Overview](#cpm-distribution-overview)
+  * [CP/M System Changes](#cpm-system-changes)
+  * [CP/M Binaries](#cpm-binaries)
 * [Useful Links](#useful-links)
 * [Future Plans?](#future-plans)
 
@@ -55,31 +56,31 @@ To get the system started there is a boot loader compiled and stored within the 
 The bootloader runs a simple monitor and allows CP/M to be launched.  Launching CP/M involves reading [/CPM/cpm.cfg](dist/CPM/cpm.cfg) which contains the list objects to read into RAM, along with the addresses to which each should be loaded.  Once the files are loaded the system jumps into the monitor, from which you can launch CP/M, TinyBASIC, & etc.
 
 
-## CP/M Binaries
+## CP/M Distribution Overview
 
 The full content of the USB stick supplied with the kit can be found beneath the [dist/](dist/) directory.
 
 CP/M doesn't have the concept of sub-directories, so all files are arranged at the top-level, however for organization different "drives" are used.  To help keep things organize I've shuffled some of the contents around such that the binaries are grouped into a set of logical collections:
 
 
-| Drive  | Contents                        |
-| ------ | ------------------------------- |
-| A:     | All general-purpose utilities.  |
-| B:     | BASIC Code and interpreter.     |
-| C:     | AzTec C Compiler                |
-| D:     |                                 |
-| E:     | Editor - WordStar               |
-| F:     | FORTH - DxForth                 |
-| G:     | Games - all types               |
-| H:     |                                 |
-| I:     |                                 |
-| J:     |                                 |
-| K:     |                                 |
-| L:     |                                 |
-| M:     |                                 |
-| N:     |                                 |
-| O:     |                                 |
-| P:     | Turbo Pascal 3.00A              |
+| Drive  | Contents                        | Notes                    |
+| ------ | ------------------------------- | ------------------------ |
+| A:     | All general-purpose utilities.  |                          |
+| B:     | BASIC Code and interpreter.     | Type `SYSTEM` to exit :) |
+| C:     | AzTec C Compiler                |                          |
+| D:     |                                 |                          |
+| E:     | Editor - WordStar               |                          |
+| F:     | FORTH - DxForth                 |                          |
+| G:     | Games - all types               |                          |
+| H:     |                                 |                          |
+| I:     |                                 |                          |
+| J:     |                                 |                          |
+| K:     |                                 |                          |
+| L:     |                                 |                          |
+| M:     |                                 |                          |
+| N:     |                                 |                          |
+| O:     |                                 |                          |
+| P:     | Turbo Pascal 3.00A              |                          |
 
 To look at the list of games, for example, you'll run something like this:
 
@@ -92,17 +93,20 @@ Or:
     A> DIR G:*.COM
 
 
+### CP/M System Changes
 
-### Additions
+In terms of new features to the system-core I have patched the CCP (command-processor) component of CP/M to look for files upon the A: drive if they're not found in the named/current drive.
 
-I have _mostly_ shuffled the various executables around for clarity, and added some new things to the file-tree located beneath [dist/](dist/).
+* Implemented in [#12](https://github.com/skx/z80-playground-cpm-fat/pull/12), and then refined in [#13](https://github.com/skx/z80-playground-cpm-fat/pull/13).
 
-In terms of new features to the system-core I have patched the CCP (command-processor) component of CP/M to look for failed files upon the A: drive if they're not found in the named/current drive.
+Possible future changes might involve:
 
-* Addition of "search path"
-  * #12
+* Drop the arduino support
+* Look at `message.asm`
+* Optimize for size.
 
-Otherwise changes are only shuffling and the addition of new binaries, as noted:
+
+### CP/M Binaries
 
 * I've added a copy of DX Forth beneath [F:](dist/CPM/DISKS/F).
 * I've added a copy of the Turbo Pascal compiler beneath [P:](dist/CPM/DISKS/P).
@@ -122,6 +126,7 @@ Otherwise changes are only shuffling and the addition of new binaries, as noted:
       * `LOCATE *.COM`.
     * or show all user-numbers which contain matches upon a single drive:
       * `LOCATE A:*.COM USER`.
+      * Note that user-numbers seem to be slightly broken in this distribution.
   * `monitor.asm`
     * Jump back to the monitor, from within the CP/M environment.
     * Essentially page in the ROM, then reboot.

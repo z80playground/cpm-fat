@@ -152,12 +152,11 @@ OPENFCB:XOR	A		;clear the record number byte at fcb+32
 	INC	A		;set zero if 0ffh returned.
         JP      NZ,OPEN_OK      ;no error finding the file.
 
-        ;; ok open failed, try again with A:, just in case that helps
-        LD A,1
-        LD (CHGDRV),A
-        CALL    DSELECT
-
+        ;; Open Failed, update the FCB entry to point to drive A:
+        ;; to see if that will help.
         LD	DE,FCB
+        LD      A,1
+        LD      (DE),A
 	LD      C,15
         CALL    ENTRY
 	LD	(RTNCODE),A	;save return code.
