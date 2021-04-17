@@ -138,6 +138,8 @@ Possible future changes might involve:
 * I added `vi.com` to [A:](dist/CPM/DISKS/A).
   * This was obtained from [https://github.com/udo-munk/s/](https://github.com/udo-munk/s/).
   * While not a perfect version of `vi` it is pretty amazing considering.
+* I added `ql.com` ("quick list")
+  * After reading [this guide to text-pagers on CP/M](https://techtinkering.com/articles/text-viewers-on-cpm/).
 * I added a couple of simple utilities to [A:](dist/CPM/DISKS/A), with source beneath [utils/](utils/):
   * `cls.com` - Clear the screen, by outputting an appropriate ANSI escape sequence.
   * `locate.com`
