@@ -108,8 +108,6 @@ Possible future changes might involve:
 
 ### CP/M Binaries
 
-I have _mostly_ shuffled the various executables around for clarity, and added some new things to the file-tree located beneath [dist/](dist/).
-
 * I've added a copy of DX Forth beneath [F:](dist/CPM/DISKS/F).
 * I've added a copy of the Turbo Pascal compiler beneath [P:](dist/CPM/DISKS/P).
   * I wrote a simple [getting started with Turbo Pascal](TURBO.md) guide.
