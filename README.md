@@ -95,9 +95,22 @@ Or:
 
 ### CP/M System Changes
 
-In terms of new features to the system-core I have patched the CCP (command-processor) component of CP/M to look for files upon the A: drive if they're not found in the named/current drive.
+In terms of new features to the system-core I have patched the CCP (command-processor) component of CP/M to add a naive "search path".  This allows commands to be executed from a different drive if not found in the present one.
 
-* Implemented in [#12](https://github.com/skx/z80-playground-cpm-fat/pull/12), and then refined in [#13](https://github.com/skx/z80-playground-cpm-fat/pull/13).
+By default no search drive is set:
+
+     A>srch
+     No search drive is configured
+
+Now configure things to look for unknown commands on the A: drive, confirming that via executing a command that lives there:
+
+     A>b:
+     B>cls
+     CLS?
+     B>srch a
+     Search drive set to A
+     B>cls
+     [ screen clears ]
 
 Possible future changes might involve:
 

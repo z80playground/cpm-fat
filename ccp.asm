@@ -6,7 +6,7 @@
 ;*
 ;*                     by Clark A. Calkins
 ;*
-;*       This file contains just the CCP and has slight 
+;*       This file contains just the CCP and has slight
 ;* 		        modifications by John Squires.
 ;*            It assembles to less than 3k in size.
 ;*       It is designed to be used on the Z80 Playground.
@@ -47,14 +47,14 @@ CNTRLX	EQU	18H		;control-x
 CNTRLZ	EQU	1AH		;control-z (end-of-file mark)
 DEL	EQU	7FH		;rubout
 ;
-	
+
 ;**************************************************************
 ;
 ;            THIS IS THE START OF THE CCP
 ;
 ;**************************************************************
 ;
-CBASE:	
+CBASE:
 	JP	COMMAND		;execute command processor (ccp).
 	JP	CLEARBUF	;entry to empty input buffer before starting ccp.
 
@@ -85,7 +85,7 @@ PRINT:	LD	E,A		;setup bdos call.
 PRINTB:	PUSH	BC
 	CALL	PRINT
 	POP	BC
-	RET	
+	RET
 ;
 ;   Routine to send a carriage return, line feed combination
 ; to the console.
@@ -132,7 +132,7 @@ DSKSEL:	LD	E,A
 ENTRY1:	CALL	ENTRY
 	LD	(RTNCODE),A	;save return code.
 	INC	A		;set zero if 0ffh returned.
-	RET	
+	RET
 ;
 ;   Routine to open a file. (DE) must point to the FCB.
 ;
@@ -152,16 +152,25 @@ OPENFCB:XOR	A		;clear the record number byte at fcb+32
 	INC	A		;set zero if 0ffh returned.
         JP      NZ,OPEN_OK      ;no error finding the file.
 
-        ;; Open Failed, update the FCB entry to point to drive A:
-        ;; to see if that will help.
+        ;; Open Failed - if we have no search-path configured then
+        ;; restore our A/F and return
+        LD      HL,SEARCH_DRIVE
+        LD      A,(HL)
+        CP      0
+        JP      Z,NO_SEARCH
+
+        ;; OK we have a search drive setup, and now we should use it.
         LD	DE,FCB
-        LD      A,1
         LD      (DE),A
 	LD      C,15
         CALL    ENTRY
 	LD	(RTNCODE),A	;save return code.
 	INC	A		;set zero if 0ffh returned.
 OPEN_OK:
+        RET
+NO_SEARCH:
+        LD A,(RTNCODE)
+        INC A
         RET
 
 
@@ -197,7 +206,7 @@ DELETE:	LD	C,19
 ;
 ENTRY2:	CALL	ENTRY
 	OR	A		;set zero flag if appropriate.
-	RET	
+	RET
 ;
 ;   Routine to read the next record from a sequential file.
 ; (DE) points to the FCB.
@@ -234,7 +243,7 @@ GETUSR:	LD	E,0FFH
 ;   Routne to get or set the current user code.
 ; If (E) is FF then this is a GET, else it is a SET.
 ;
-GETSETUC: 
+GETSETUC:
     LD	C,32
 	JP	ENTRY
 ;
@@ -248,13 +257,13 @@ SETCDRV:CALL	GETUSR		;get user number
 	LD	HL,CDRIVE	;now add in the current drive number.
 	OR	(HL)
 	LD	(TDRIVE),A	;and save.
-	RET	
+	RET
 ;
 ;   Move currently active drive down to (TDRIVE).
 ;
 MOVECD:	LD	A,(CDRIVE)
 	LD	(TDRIVE),A
-	RET	
+	RET
 ;
 ;   Routine to convert (A) into upper case ascii. Only letters
 ; are affected.
@@ -264,7 +273,7 @@ UPPER:	CP	'a'		;check for letters in the range of 'a' to 'z'.
 	CP	'{'
 	RET	NC
 	AND	5FH		;convert it if found.
-	RET	
+	RET
 ;
 ;   Routine to get a line of input. We must check to see if the
 ; user is in (BATCH) mode. If so, then read the input from file
@@ -349,7 +358,7 @@ GETINP3:INC	HL
 GETINP4:LD	(HL),A		;add trailing null.
 	LD	HL,INBUFF+2
 	LD	(INPOINT),HL	;reset input line pointer.
-	RET	
+	RET
 ;
 ;   Routine to check the console for a key pressed. The zero
 ; flag is set is none, else the character is returned in (A).
@@ -361,7 +370,7 @@ CHKCON:	LD	C,11		;check console.
 	LD	C,1		;else get character.
 	CALL	ENTRY
 	OR	A		;clear zero flag and return.
-	RET	
+	RET
 ;
 ;   Routine to get the currently active drive number.
 ;
@@ -435,7 +444,7 @@ CHECK:	LD	A,(DE)
 	RET	Z
 	CP	'>'
 	RET	Z
-	RET	
+	RET
 ;
 ;   Get the next non-blank character from (DE).
 ;
@@ -453,7 +462,7 @@ ADDHL:	ADD	A,L
 	LD	L,A
 	RET	NC		;take care of any carry.
 	INC	H
-	RET	
+	RET
 ;
 ;   Convert the first name in (FCB).
 ;
@@ -564,11 +573,11 @@ GETEXT9:DEC	C
 	JP	NZ,GETEXT8
 	LD	A,B
 	OR	A
-	RET	
+	RET
 ;
 ;   CP/M command table. Note commands can be either 3 or 4 characters long.
 ;
-NUMCMDS EQU	9		;number of commands
+NUMCMDS EQU	10 		;number of commands
 CMDTBL:	DEFB	'DIR '
 	DEFB	'ERA '
 	DEFB	'TYPE'
@@ -578,6 +587,8 @@ CMDTBL:	DEFB	'DIR '
 	DEFB	'IMP '		; John's IMPort command to get files in from SD card to CP/M disks
 	DEFB	'EXP '		; John's EXPort command to send files out to SD card from CP/M disks
 	DEFB	'DU  '		; John's Disk Usage command to see how blocks are allocated
+        DEFB    'SRCH'          ; Steve's search-path command
+CMDEND:
 ;
 ;
 ;   Search the command table for a match with what has just
@@ -604,7 +615,7 @@ SEARCH2:LD	A,(DE)
 	CP	' '
 	JP	NZ,SEARCH4
 	LD	A,C		;set return register for this command.
-	RET	
+	RET
 SEARCH3:INC	HL
 	DEC	B
 	JP	NZ,SEARCH3
@@ -614,7 +625,7 @@ SEARCH4:INC	C
 ;   Set the input buffer to empty and then start the command
 ; processor (ccp).
 ;
-CLEARBUF: 
+CLEARBUF:
     XOR	A
 	LD	(INBUFF+1),A	;second byte is actual length.
 ;
@@ -630,9 +641,9 @@ COMMAND:
 	PUSH	BC			;note that (C) should be equal to:
 	LD	A,C				;(uuuudddd) where 'uuuu' is the user number
 	RRA					;and 'dddd' is the drive number.
-	RRA	
-	RRA	
-	RRA	
+	RRA
+	RRA
+	RRA
 	AND	0FH				;isolate the user number.
 	LD	E,A
 	CALL	GETSETUC	;and set it.
@@ -689,7 +700,7 @@ CMMND2:	LD	DE,TBUFF
 ;   CP/M command address table.
 ;
 CMDADR:	DEFW	DIRECT,ERASE,TYPE,SAVE
-	DEFW	RENAME,USER,IMPORT_COMMAND,EXPORT_COMMAND,DU_COMMAND,UNKNOWN
+	DEFW	RENAME,USER,IMPORT_COMMAND,EXPORT_COMMAND,DU_COMMAND,SEARCH_COMMAND,UNKNOWN
 ;
 ;   Halt the system. Reason for this is unknown at present.
 ;
@@ -733,8 +744,8 @@ DECODE1:LD	A,(HL)
 	AND	0E0H
 	JP	NZ,SYNERR
 	LD	A,B
-	RLCA	
-	RLCA	
+	RLCA
+	RLCA
 	RLCA			;(A)=(B)*8
 	ADD	A,B		;.......*9
 	JP	C,SYNERR
@@ -745,7 +756,7 @@ DECODE2:JP	C,SYNERR
 	LD	B,A		;and save result.
 	DEC	C		;only look at 11 digits.
 	JP	NZ,DECODE1
-	RET	
+	RET
 DECODE3:LD	A,(HL)		;spaces must follow (why?).
 	CP	' '
 	JP	NZ,SYNERR
@@ -753,7 +764,7 @@ DECODE3:LD	A,(HL)		;spaces must follow (why?).
 DECODE4:DEC	C
 	JP	NZ,DECODE3
 	LD	A,B		;set (A)=the numeric value entered.
-	RET	
+	RET
 ;
 ;   Move 3 bytes from (HL) to (DE). Note that there is only
 ; one reference to this at (A2D5h).
@@ -768,7 +779,7 @@ HL2DE:	LD	A,(HL)
 	INC	DE
 	DEC	B
 	JP	NZ,HL2DE
-	RET	
+	RET
 ;
 ;   Compute (HL)=(TBUFF)+(A)+(C) and get the byte that's here.
 ;
@@ -776,7 +787,7 @@ EXTRACT:LD	HL,TBUFF
 	ADD	A,C
 	CALL	ADDHL
 	LD	A,(HL)
-	RET	
+	RET
 ;
 ;  Check drive specified. If it means a change, then the new
 ; drive will be selected. In any case, the drive byte of the
@@ -812,7 +823,7 @@ RESETDR:LD	A,(CHGDRV)	;drive change indicated?
 ;*
 ;**************************************************************
 ;
-DIRECT:	
+DIRECT:
 	CALL	CONVFST		;convert file name.
 	CALL	DSELECT		;select indicated drive.
 	LD	HL,FCB+1		;was any file indicated?
@@ -831,9 +842,9 @@ DIRECT2:LD	E,0			;set initial cursor position.
 DIRECT3:
 	JP	Z,DIRECT9		;terminate if no more names.
 	LD	A,(RTNCODE)		;get file's position in segment (0-3).
-	RRCA	
-	RRCA	
-	RRCA	
+	RRCA
+	RRCA
+	RRCA
 	AND	60H				;(A)=position*32
 	LD	C,A
 	LD	A,10
@@ -1033,7 +1044,7 @@ NOSPACE:DEFB	'No space',0
 ;*
 ;**************************************************************
 ;
-RENAME:	
+RENAME:
 	CALL	CONVFST			;convert first file name.
 	JP	NZ,SYNERR			;wild cards not allowed.
 	LD	A,(CHGDRV)			;remember any change in drives specified.
@@ -1090,7 +1101,7 @@ RENAME6:
 	LD	BC,EXISTS	;destination file already exists.
 	CALL	PLINE
 	JP	GETBACK
-EXISTS:	
+EXISTS:
 	DEFB	'File exists',0
 ;
 ;**************************************************************
@@ -1099,7 +1110,7 @@ EXISTS:
 ;*
 ;**************************************************************
 ;
-USER:	
+USER:
 	CALL	DECODE		;get numeric value following command.
 	CP	16		;legal user number?
 	JP	NC,SYNERR
@@ -1120,16 +1131,16 @@ USER:
 ; This takes the name of a file from the command line.
 ; It asks the Arduino for the size of this file. This is done by sending the appropriate command
 ; to Arduino, which reads the name of the file from the FCB by DMA. It responds with the size of
-; the file (placed in the DMA area). This is 5 bytes long. The first byte is 0 if the 
+; the file (placed in the DMA area). This is 5 bytes long. The first byte is 0 if the
 ; file doesn't exist. The next 4 are the file size in bytes.
 ; This command then creates a file of the name from the FCB.
 ; It then reads 128 byte blocks of data from the Arduino taken from this file.
 ; It saves each one to disk.
 ; Finally it closes the file it just created.
 ;
-importbyteslow:	
+importbyteslow:
 	dw 0
-importbyteshigh:	
+importbyteshigh:
 	dw 0
 
 IMPORT_COMMAND:
@@ -1138,7 +1149,7 @@ IMPORT_COMMAND:
 	ld 	c, 9		; Print String
 	call	ENTRY		; Call BDOS to print it
 	call 	CRLF
-	
+
 	CALL	CONVFST		;convert file name.
 	JP	NZ,SYNERR	;wild cards not allowed.
 	CALL	DSELECT		;and select this drive.
@@ -1154,21 +1165,21 @@ IMPORT_COMMAND:
 	; Get info on whether file exists
 
 	ld de, TBUFF	; Get pointer to DMA area
-	
+
 	ld a, (de)
 	cp 0
 	jp z, EXPORT_ERROR_FILE_NOT_FOUND
-	
+
 	ld	de, FCB
 	ld 	c, 22		; Create file
 	call	ENTRY		; Call BDOS to make file
-	
+
 	;jp GETBACK
-	
+
 	; Import the data, 128 bytes at a time
-	
+
 IMPORT_MAIN_LOOP:
-	
+
 	call	STDDMA		; Set the standard DMA address
 	;out (GETFILE_PORT), a 	; Get the 128 bytes from Arduino
 
@@ -1179,14 +1190,14 @@ IMPORT_MAIN_LOOP:
 	jr      z, IMPORT_DISK_FULL
 	cp 	1
 	jr      z, IMPORT_NO_DIR
-	
+
 	ld a, (65535)
 	cp 0
 	jr z, IMPORT_FINISHED
-	
+
 	jp	IMPORT_MAIN_LOOP
-	
-IMPORT_FINISHED:	
+
+IMPORT_FINISHED:
 	; Finished so close file
 
 	ld	de, FCB
@@ -1198,26 +1209,26 @@ IMPORT_FINISHED:
 	ld 	c, 9		; Print String
 	call	ENTRY		; Call BDOS to print it
 	JP	GETBACK
-	
+
 IMPORT_DISK_FULL:
 	call 	CRLF
 	ld 	de, IMPORT_MESSAGE_DISK_FULL
 	ld 	c, 9		; Print String
 	call	ENTRY		; Call BDOS to print it
 	jp	GETBACK
-	
+
 IMPORT_NO_DIR:
 	call 	CRLF
 	ld 	de, IMPORT_MESSAGE_NO_DIR
 	ld 	c, 9		; Print String
 	call	ENTRY		; Call BDOS to print it
 	jp	GETBACK
-	
+
 IMPORT_MESSAGE_DISK_FULL:
 	defb	"Disk full!$"
 IMPORT_MESSAGE_NO_DIR:
 	defb	"No directory space left!$"
-		
+
 IMPORT_MESSAGE_INTRO:
 	defb "Importing a file from PC to CP/M...$"
 IMPORT_MESSAGE_SUCCESS:
@@ -1237,9 +1248,9 @@ IMPORT_MESSAGE_SUCCESS:
 ; The arduino saves sector on to SD card.
 ; Finally we close the file.
 ;
-exportbyteslow:	
+exportbyteslow:
 	dw 0
-exportbyteshigh:	
+exportbyteshigh:
 	dw 0
 
 EXPORT_COMMAND:
@@ -1256,7 +1267,7 @@ EXPORT_COMMAND:
 	CALL	DSELECT		;and select this drive.
 	CALL	SRCHFCB		;is this file present?
 	JP	Z,EXPORT_ERROR_FILE_NOT_FOUND	;no, print error message.
-	
+
 	;ld 	a, StartExportCommand
 	;out 	(port), a
 	ld 	hl, FCB+1
@@ -1266,10 +1277,10 @@ EXPORT_COMMAND_SEND_NAME_LOOP:
 	;out	(port), a
 	inc 	hl
 	djnz	EXPORT_COMMAND_SEND_NAME_LOOP
-	
+
 	;call debug
 	;db "CCP open the file", 13, 10, 0
-	
+
 	; Open the file
 	ld	de, FCB
 	ld 	c, 15		; Open file
@@ -1285,19 +1296,19 @@ EXPORT_LOOP:
 	ld	de, TBUFF
 	ld 	c, 26			; Set DMA address
 	call	ENTRY			; Call BDOS
-	
+
 	ld	de, FCB
 	ld 	c, 20			; Read sequential
 	call	ENTRY			; Call BDOS
 	cp	0
 	jr	nz, EXPORT_NO_MORE_DATA
-	
+
 	;call debug
 	;db "CCP export a sector", 13, 10, 0
 
 	;ld 	a, ContinueExportCommand	; Every block of 128 bytes is preceeded by a "continue" command
 	;out 	(port), a
-	
+
 	ld	hl, TBUFF		; Point to start of the DMA buffer
 	ld 	b, 128			; Count for 128 bytes of this sector
 EXPORT_BYTE_LOOP:
@@ -1306,7 +1317,7 @@ EXPORT_BYTE_LOOP:
 	inc	hl			; Point to next byte
 	djnz	EXPORT_BYTE_LOOP	; Do all 128 bytes
 	jr	EXPORT_LOOP		; Continue to next sector
-	
+
 EXPORT_NO_MORE_DATA:
 	; Close the file
 
@@ -1317,7 +1328,7 @@ EXPORT_NO_MORE_DATA:
 	ld 	c, 16		; Close file
 	call	ENTRY		; Call BDOS to close file
 
-	;ld 	a, EndExportCommand	
+	;ld 	a, EndExportCommand
 	;out 	(port), a
 
 	call 	CRLF
@@ -1342,7 +1353,7 @@ EXPORT_MESSAGE_SUCCESS:
 
 
 ;**************************************************************
-;	
+;
 ;	Disk Usage (DU) command
 ;
 ;**************************************************************
@@ -1352,50 +1363,50 @@ DU_COMMAND:
 
 	call 	debug
 	db 	"= DU", 13, 10, 0
-	
+
 	;call	CRLF
 	;jp 	GETBACK
-	
+
 	;; Loop through all 700 records in my large.txt file, showing them on screen
-	
+
 	ld 	hl, DU_SECTOR_COUNTER
 	ld	(hl), 0
-	
+
 	ld 	de, FCB
 	ld	hl, LARGE_TXT_FCB
 	ld	bc, 16
 	ldir				; Copy file name into FCB
-	
+
 	call 	debug
 	db 	"= Open", 13, 10, 0
-	
+
 	ld	de, FCB
 	ld	c, 15			; open file
 	call	ENTRY			; by calling BDOS
-	
+
 	call 	debug
 	db 	"= Result = ", 0
 
 	ld	c, a			; Get error code if any
 	call 	show_c_in_hex
-	
+
 	call	debug
 	db	13, 10, "= DMA", 13, 10, 0
 
-SECTOR_COUNTER_LOOP:	
+SECTOR_COUNTER_LOOP:
 	ld	de, TBUFF
 	ld 	c, 26			; Set DMA address
 	call	ENTRY			; by calling BDOS
-	
+
 	ld	hl, FCB
 	ld	de, 021H
 	add	hl, de			; HL points to random record area of FCB
-	
+
 	ld	bc, (DU_SECTOR_COUNTER)	; get sector counter
 	ld	(hl), c			; Put bc into random record area of FCB
 	inc	hl
 	ld	(hl), b			; FCB now set for read
-	
+
 	ld	de, FCB
 	ld 	c, 33			; Read a "random access" record
 	call	ENTRY			; by calling BDOS
@@ -1412,34 +1423,34 @@ SHOW_SECTOR_LOOP:
 	out	(0), a
 	dec	d
 	jr	nz, NOT_END_OF_LINE
-	
+
 	ld 	a, 13
 	out	(0), a
 	ld 	a, 10
 	out	(0), a
 	ld	d, 64
-	
+
 NOT_END_OF_LINE:
 	inc	hl
 	djnz	SHOW_SECTOR_LOOP
-	
+
 	ld	hl, (DU_SECTOR_COUNTER)	; get sector counter
 	inc	hl
 	ld	(DU_SECTOR_COUNTER), hl	; set sector counter
 	ld	de, -700
 	add	hl, de
-	
-	
+
+
 	ld 	a, l
 	cp	0
-	jr	nz, 	SECTOR_COUNTER_LOOP		
+	jr	nz, 	SECTOR_COUNTER_LOOP
 	ld 	a, h
 	cp	0
-	jr	nz, 	SECTOR_COUNTER_LOOP		
-	
-	
-	
-	
+	jr	nz, 	SECTOR_COUNTER_LOOP
+
+
+
+
 	call	debug
 	db	"= CLOSE", 13, 10, 0
 
@@ -1447,17 +1458,68 @@ NOT_END_OF_LINE:
 	ld	de, FCB
 	ld	c, 16			; close the file
 	call	ENTRY			; by calling BDOS
-	
+
 	call	CRLF
 	jp 	GETBACK
-	
+
 DU_SECTOR_COUNTER:
 	dw	0
-	
+
 LARGE_TXT_FCB:
 	db	16, "LARGE   TXT", 0, 0, 0, 0
-	
 
+
+;**************************************************************
+;
+;	Search (SRCH) command
+;
+;**************************************************************
+
+SEARCH_COMMAND:
+	CALL	CONVFST		;convert file name.
+	LD	HL,FCB+1	;was any input provided?
+	LD	A,(HL)
+	CP	' '
+        JP      Z, SEARCH_SHOW_CURRENT ; nothing entered - show search
+
+        CP      '0'                  ; was this an unset?
+        JP      NZ, SEARCH_SET_DRIVE ; nope? OK set the letter.
+
+        XOR     A
+        JP      SEARCH_SET_STORE ; otherwise reset the search flag
+
+SEARCH_SET_DRIVE:
+        SUB     'A'           ; A -> 1, B -> 2
+        INC     A
+SEARCH_SET_STORE:
+        LD      HL,SEARCH_DRIVE
+        LD      (HL),A
+
+        ; fall-through to report what we've set
+
+SEARCH_SHOW_CURRENT:
+        LD      HL,SEARCH_DRIVE
+        LD      A,(HL)
+        CP      0
+        JP      Z, SEARCH_NOTHING_SET
+
+        LD      BC, SEARCH_PROMPT
+        CALL    PLINE
+        LD      HL,SEARCH_DRIVE
+        LD      A,(HL)
+        ADD     A,'A'-1
+        CALL    PRINTB
+        CALL    CRLF
+        JP      GETBACK
+
+SEARCH_NOTHING_SET:
+        LD      BC, SEARCH_NOTHING
+        CALL    PLINE
+        JP      GETBACK
+SEARCH_PROMPT:
+        DEFB    'Search drive set to ',0
+SEARCH_NOTHING:
+        DEFB    'No search drive is configured',0
 ;
 ;**************************************************************
 ;*
@@ -1480,12 +1542,12 @@ UNKNOWN:
 ;
 ;   Here a file name was typed. Prepare to execute it.
 ;
-UNKWN1:	
+UNKWN1:
 	LD	DE,FCB+9	;an extension specified?
 	LD	A,(DE)
 	CP	' '
 	JP	NZ,SYNERR	;yes, not allowed.
-UNKWN2:	
+UNKWN2:
 	PUSH	DE
 	CALL	DSELECT		;select specified drive.
 	POP	DE
@@ -1497,7 +1559,7 @@ UNKWN2:
 ;   Load in the program.
 ;
 	LD	HL,TBASE	;store the program starting here.
-UNKWN3:	
+UNKWN3:
 	PUSH	HL
 	EX	DE,HL
 	CALL	DMASET		;set transfer address.
@@ -1517,7 +1579,7 @@ UNKWN3:
 ;
 ;   Get here after finished reading.
 ;
-UNKWN4:	
+UNKWN4:
 	POP	HL
 	DEC	A		;normal end of file?
 	JP	NZ,UNKWN99
@@ -1539,7 +1601,7 @@ UNKWN4:
 	LD	B,33
 	CALL	HL2DE
 	LD	HL,INBUFF+2	;now move the remainder of the input
-UNKWN5:	
+UNKWN5:
 	LD	A,(HL)		;line down to (0080h). Look for a non blank.
 	OR	A		;or a null.
 	JP	Z,UNKWN6
@@ -1550,10 +1612,10 @@ UNKWN5:
 ;
 ;   Do the line move now. It ends in a null byte.
 ;
-UNKWN6:	
+UNKWN6:
 	LD	B,0		;keep a character count.
 	LD	DE,TBUFF+1	;data gets put here.
-UNKWN7:	
+UNKWN7:
 	LD	A,(HL)		;move it now.
 	LD	(DE),A
 	OR	A
@@ -1562,7 +1624,7 @@ UNKWN7:
 	INC	HL
 	INC	DE
 	JP	UNKWN7
-UNKWN8:	
+UNKWN8:
 	LD	A,B		;now store the character count.
 	LD	(TBUFF),A
 	CALL	CRLF		;clean up the screen.
@@ -1579,14 +1641,14 @@ UNKWN8:
 ;
 ;   Get here if some error occured.
 ;
-UNKWN9:	
+UNKWN9:
 	CALL	RESETDR		;inproper format.
 	JP	SYNERR
-UNKWN0:	
+UNKWN0:
 	LD	BC,BADLOAD	;read error or won't fit.
 	CALL	PLINE
 	JP	GETBACK
-UNKWN99:	
+UNKWN99:
 	LD	BC,BADLOAD99	;read error or won't fit.
 	CALL	PLINE
 	JP	GETBACK
@@ -1609,10 +1671,10 @@ GETBACK1: CALL	CONVFST		;convert first name in (FCB).
 	OR	(HL)
 	JP	NZ,SYNERR
 	JP	CMMND1		;ok, return to command level.
-	
+
 ; Some subroutines added by John Squires to help with the new IMPort command
 
-; 32-bit addition. 
+; 32-bit addition.
 ; Input:
 ; 32-bit number in H'L'HL
 ; 32-bit number in D'E'DE
@@ -1625,8 +1687,8 @@ ADD32:
     adc     hl, de 	; Now deal with upper 16 bits, including carry from first stage
     exx
     ret
-	
-; 32-bit subtraction. 
+
+; 32-bit subtraction.
 ; Input:
 ; 32-bit number in H'L'HL
 ; 32-bit number in D'E'DE
@@ -1639,7 +1701,7 @@ SUBTRACT32:
     sbc     hl, de 	; Now deal with upper 16 bits, including carry from first stage
     exx
     ret
-	
+
 ; Display 32 bit number in h'l'hl
 display_hl32:
 	ld	de,34464
@@ -1669,15 +1731,15 @@ display_hl32:
 	ld	e, 10
 	call	display_hl32_digit
 	ld	e, 1
-display_hl32_digit:	
+display_hl32_digit:
 	ld	a, '0'-1
-display_hl32_digit_loop:	
+display_hl32_digit_loop:
 	inc	a
 	call	SUBTRACT32
 	jr	nc,display_hl32_digit_loop
 	call	ADD32
 	;out 	(PRINTCHAR_PORT), a
-	ret 
+	ret
 
 ; --------------------------------------------
 ; A temporary funciton to help with debugging
@@ -1708,7 +1770,7 @@ debug_message_loop:
 	jr z, debug_message_complete
 	inc hl
 	;out (PRINTCHAR_PORT), a 		; print it
-	jr debug_message_loop	
+	jr debug_message_loop
 
 debug_message_complete:
 	inc hl
@@ -1728,7 +1790,7 @@ store_hl:
 	defw 0			; Temporary store for hl
 store_de:
 	defw 0			; Temporary store for de
-	
+
 show_c_in_hex:
 	push af
 	push hl
@@ -1739,7 +1801,7 @@ show_c_in_hex:
 	pop af
 	ret
 
-show_hl_in_hex_inner:	
+show_hl_in_hex_inner:
 	ld  c,h
 	call  show_c_in_hex_inner
 	ld  c,l
@@ -1766,7 +1828,7 @@ convert_nibble_to_char:
 ;   ccp stack area.
 ;
 	DEFB	0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
-CCPSTACK: 
+CCPSTACK:
 	defb 0,0		; I changed the syntax here in case my assembler was unable to understand what "$" means.
 ;
 ;   Batch (or SUBMIT) processing information storage.
@@ -1781,4 +1843,4 @@ RTNCODE:DEFB	0		;status returned from bdos call.
 CDRIVE:	DEFB	0		;currently active drive.
 CHGDRV:	DEFB	0		;change in drives flag (0=no change).
 NBYTES:	DEFW	0		;byte counter used by TYPE.
-;
+SEARCH_DRIVE:    DEFB 0         ;search drive
