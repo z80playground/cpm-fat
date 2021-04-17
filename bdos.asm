@@ -177,9 +177,9 @@ BDOS_Read_Console_Buffer:
     ld d, (hl)                  ; d = max buffer length
     inc hl
     ld (hl), 0                  ; reset the "final length" byte.
-    ld c, l                     
+    ld c, l
     ld b, h                     ; store this location
-    ld e, 0                 
+    ld e, 0
     inc hl
     ex de, hl                   ; DE points to the start of the buffer spare space
     push hl
@@ -198,6 +198,8 @@ BDOS_Read_Console_Buffer1:
     cp 13                       ; Done?
     jr z, BDOS_Read_Console_Buffer2
     cp 8                        ; Backspace key?
+    jr z, BDOS_Read_Console_Buffer_Backspace
+    cp 127
     jr z, BDOS_Read_Console_Buffer_Backspace
     ld (de), a                  ; Store the char in the buffer
     inc (hl)                    ; Increase the final-chars-count
@@ -284,7 +286,7 @@ BDOS_Select_Disk:
     ld (hl), 0
     dec hl
     call CORE_open_file
-    cp YES_OPEN_DIR                     
+    cp YES_OPEN_DIR
     jr z, BDOS_Select_Disk_ok
 
     ld hl, filename_buffer              ; If drive "X" is not found, create the folder for it
@@ -303,13 +305,13 @@ BDOS_Select_Disk_ok:
     ld (hl), 0
     dec hl
     call CORE_open_file
-    cp YES_OPEN_DIR                     
+    cp YES_OPEN_DIR
     jr z, BDOS_Select_Disk_User_ok
 
     ld hl, filename_buffer              ; Create folder if not found
     call CORE_create_directory
 
-BDOS_Select_Disk_User_ok:    
+BDOS_Select_Disk_User_ok:
     call clear_current_fcb                          ; Clear out current FCB
 	jp return_0_in_a
 
@@ -510,10 +512,10 @@ BDOS_Delete_File:
     ENDIF
 
     ; We enter with DE pointing to a FCB, such as "file.xyz" or "*.txt".
-    ; We use this to run a DIR-search-first, returning a result in A (0=good) and 
+    ; We use this to run a DIR-search-first, returning a result in A (0=good) and
     ; storing its resulting FCB in a temporary FCB.
     ; If no file was found then we are done.
-    ; If a file was found then we need to delete that file, and loop back to the start. 
+    ; If a file was found then we need to delete that file, and loop back to the start.
 
     ld a, 255
     ld (delete_flag), a                             ; Store the result
@@ -596,7 +598,7 @@ BDOS_Read_Sequential:
     call show_bdos_message
 	call CORE_message
 	db 'Rd_Seq',13,10,0
-    call show_fcb    
+    call show_fcb
     ENDIF
 
     push de
@@ -654,7 +656,7 @@ BDOS_Write_Sequential:
 
     push de
     call disk_activity_start
-dont_turn_on:    
+dont_turn_on:
     call compare_current_fcb
     jr z, BDOS_Write_Sequential1
     ; Need to close existing file and open the new one.
@@ -729,7 +731,7 @@ make_file_success:
     jp return_0_in_a
 
 BDOS_Rename_File:
-    ; DE points to a FCB with the 
+    ; DE points to a FCB with the
     ; SOURCE filename at FCB+0 and
     ; TARGET filename at FCB+16.
     ; The disk drive must be the same in both names, or else error.
@@ -744,7 +746,7 @@ BDOS_Rename_File:
     ENDIF
 
     ld (store_source), de                               ; Store source FCB pointer for now
-    push de                                         
+    push de
     call CORE_close_file                                ; just in case there is an open one.
     pop de
 
@@ -803,7 +805,7 @@ BDOS_Rename_File_same_drives:
     jp nz, BDOS_Rename_File_no_source
 
     ; Read in the P_FAT_DIR_INFO
-    call CORE_dir_info_read    
+    call CORE_dir_info_read
     jr nz, BDOS_Rename_File_no_source
 
     ; Update the name of the target file by copying the name from target to source
@@ -840,7 +842,7 @@ BDOS_Return_Login_Vector:
 	;call CORE_message
 	;db 'Ret_Log_Vec',13,10,0
     ld hl, $FFFF ; All drives are always logged in
-    ld a, l 
+    ld a, l
     ld b, h
 	ret
 
@@ -882,7 +884,7 @@ BDOS_Get_Addr_Alloc:
     ; ENDIF
 
     ld hl, DISKALLOC
-    ld a, l 
+    ld a, l
     ld b, h
 	ret
 
@@ -913,7 +915,7 @@ BDOS_Get_Addr_Disk_Parms:
 
     ; Returns address in HL
     ld hl, dpblk
-    ld a, l 
+    ld a, l
     ld b, h
 	ret
 
@@ -948,7 +950,7 @@ BDOS_Read_Random:
 	db 'Rd_Rnd',13,10,0
     call show_fcb
     ENDIF
-BDOS_Read_Random1:    
+BDOS_Read_Random1:
     push de                                         ; store FCB for now
     call disk_activity_start
     call get_random_pointer_from_fcb                ; random is in hl
@@ -970,12 +972,12 @@ BDOS_Read_Random1:
     ld de, (dma_address)
     call CORE_read_from_file
     jr nz, BDOS_Read_Random2                        ; If fail to read, return error code
-    call CORE_close_file                             
+    call CORE_close_file
     call clear_current_fcb
     call CORE_disk_off
     jp return_0_in_a                                ; success
 BDOS_Read_Random2:
-    call CORE_close_file                             
+    call CORE_close_file
     call clear_current_fcb
     call CORE_disk_off
     ld a, 4                                         ; "Seek to unwritten extent" error if we try to read
@@ -988,7 +990,7 @@ BDOS_Write_Random:
 	call CORE_message
 	db 'Wr_Rand',13,10,0
     ENDIF
-BDOS_Write_Random1:    
+BDOS_Write_Random1:
     push de                                         ; store FCB for now
     call disk_activity_start
     ;call show_fcb
@@ -1043,7 +1045,7 @@ BDOS_Compute_File_Size:
     ENDIF
 
     ; DE -> FCB
-    ; Sets the random-record count bytes part of the FCB to the number of 128-byte records in the file. 
+    ; Sets the random-record count bytes part of the FCB to the number of 128-byte records in the file.
     ; Return A=0 FOR SUCCESS, or 255 if error.
 
     push de                                         ; Store source FCB pointer for now
@@ -1066,7 +1068,7 @@ BDOS_Compute_File_Size:
     jr nz, BDOS_Compute_File_Size_not_exist
 
     ; Read in the P_FAT_DIR_INFO into disk_buffer
-    call CORE_dir_info_read    
+    call CORE_dir_info_read
     jr nz, BDOS_Compute_File_Size_not_exist
 
     ; Extract the file size into bchl
@@ -1185,7 +1187,7 @@ BDOS_48:
 ; DRIVE     1   0 = default, 1..16 = A..P                                                           0
 ; FILENAME  8   Filename in ASCII uppercase. Bit 7s are for attributes.                             1-8
 ; TYPE      3   Extension is ASCII uppercase. Bit 7s are for attributes.                            9-11
-; EX        1   Extent Low Byte. An extent is 16384 bytes.                                          12    
+; EX        1   Extent Low Byte. An extent is 16384 bytes.                                          12
 ; S1        1                                                                                       13
 ; S2        1   Extent High Byte.                                                                   14
 ; RC        1   Record count for this extent (0-127)                                                15
@@ -1233,7 +1235,7 @@ initialise_fcb1:
     inc hl
     cp '.'
     jr z, initialise_fcb2
-    call is_filename_char_valid            
+    call is_filename_char_valid
     jr nz, initialise_fcb_error
     call convert_a_to_uppercase
     ld (de), a
@@ -1254,8 +1256,8 @@ initialise_fcb5:
     ld a, (hl)                          ; Copy filename
     inc hl
     cp 0
-    jr z, initialise_fcb6               
-    call is_filename_char_valid            
+    jr z, initialise_fcb6
+    call is_filename_char_valid
     jr nz, initialise_fcb_error
     call convert_a_to_uppercase
     ld (de), a
@@ -1283,7 +1285,7 @@ initialise_fcb9:
 initialise_fcb_error:
     pop de
     or 1                                ; clear zero flag for error
-    ret    
+    ret
 
 is_filename_char_valid:
     ; pass in char in a
@@ -1298,7 +1300,7 @@ is_filename_char_valid:
     ret
 is_filename_char_valid_no:
     or 1                                ; clear zero flag for error
-    ret    
+    ret
 
 convert_a_to_uppercase:
     cp 'a'
@@ -1345,7 +1347,7 @@ set_file_pointer_in_fcb:
     inc hl
     inc hl                              ; hl -> FCB.S2
     ld (hl), d
-    
+
     ld bc, 18
     add hl, bc                          ; hl -> FCB.CR
     ld (hl), a
@@ -1779,7 +1781,7 @@ disk_flash:
     db 0
 
 ;
-dpblk:	
+dpblk:
 ; Fake disk parameter block for all disks
 	; defw	80		;sectors per track
 	; defb	5		;block shift factor	(5 & 31 = 4K Block Size)
@@ -1825,7 +1827,7 @@ DISKALLOC:
 ; 	UINT16 DIR_WrtDate;					    /* 18H, file modification date  */
 ; 	UINT16 DIR_FstClusLO;					/* 1AH */
 ; 	UINT32 DIR_FileSize;					/* 1CH, file length */
-; } 
+; }
 
 dma_address:
     ds 2
@@ -1863,4 +1865,3 @@ BDOS_END equ $
 IF BDOS_END-BDOS_START>2560
     .WARNING "The BDOS is too big! 2560 bytes max!"
 ENDIF
-
