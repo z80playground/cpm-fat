@@ -577,16 +577,14 @@ GETEXT9:DEC	C
 ;
 ;   CP/M command table. Note commands can be either 3 or 4 characters long.
 ;
-NUMCMDS EQU	10 		;number of commands
+NUMCMDS EQU	( CMDEND - CMDTBL ) / 4 		;number of commands
 CMDTBL:	DEFB	'DIR '
 	DEFB	'ERA '
 	DEFB	'TYPE'
 	DEFB	'SAVE'
 	DEFB	'REN '
 	DEFB	'USER'
-	DEFB	'IMP '		; John's IMPort command to get files in from SD card to CP/M disks
-	DEFB	'EXP '		; John's EXPort command to send files out to SD card from CP/M disks
-	DEFB	'DU  '		; John's Disk Usage command to see how blocks are allocated
+	DEFB	'DU  '		; John's Disk Usage command
         DEFB    'SRCH'          ; Steve's search-path command
 CMDEND:
 ;
@@ -700,7 +698,7 @@ CMMND2:	LD	DE,TBUFF
 ;   CP/M command address table.
 ;
 CMDADR:	DEFW	DIRECT,ERASE,TYPE,SAVE
-	DEFW	RENAME,USER,IMPORT_COMMAND,EXPORT_COMMAND,DU_COMMAND,SEARCH_COMMAND,UNKNOWN
+	DEFW	RENAME,USER,DU_COMMAND,SEARCH_COMMAND,UNKNOWN
 ;
 ;   Halt the system. Reason for this is unknown at present.
 ;
@@ -1120,236 +1118,6 @@ USER:
 	JP	Z,SYNERR	;yes, that is not allowed.
 	CALL	GETSETUC	;ok, set user code.
 	JP	GETBACK1
-
-;
-;**************************************************************
-;*
-;*             I M P O R T   C O M M A N D
-;*
-;**************************************************************
-;
-; This takes the name of a file from the command line.
-; It asks the Arduino for the size of this file. This is done by sending the appropriate command
-; to Arduino, which reads the name of the file from the FCB by DMA. It responds with the size of
-; the file (placed in the DMA area). This is 5 bytes long. The first byte is 0 if the
-; file doesn't exist. The next 4 are the file size in bytes.
-; This command then creates a file of the name from the FCB.
-; It then reads 128 byte blocks of data from the Arduino taken from this file.
-; It saves each one to disk.
-; Finally it closes the file it just created.
-;
-importbyteslow:
-	dw 0
-importbyteshigh:
-	dw 0
-
-IMPORT_COMMAND:
-	call 	CRLF
-	ld 	de, IMPORT_MESSAGE_INTRO
-	ld 	c, 9		; Print String
-	call	ENTRY		; Call BDOS to print it
-	call 	CRLF
-
-	CALL	CONVFST		;convert file name.
-	JP	NZ,SYNERR	;wild cards not allowed.
-	CALL	DSELECT		;and select this drive.
-	CALL	SRCHFCB		;is this file present?
-	JP	NZ,RENAME6	;yes, print error message.
-
-	ld de, TBUFF			; Copy the file name from FCB to the DMA location
-	ld hl, FCB
-	ld bc, 12
-	ldir
-	;out 	(IMPORTFILE_PORT), a
-
-	; Get info on whether file exists
-
-	ld de, TBUFF	; Get pointer to DMA area
-
-	ld a, (de)
-	cp 0
-	jp z, EXPORT_ERROR_FILE_NOT_FOUND
-
-	ld	de, FCB
-	ld 	c, 22		; Create file
-	call	ENTRY		; Call BDOS to make file
-
-	;jp GETBACK
-
-	; Import the data, 128 bytes at a time
-
-IMPORT_MAIN_LOOP:
-
-	call	STDDMA		; Set the standard DMA address
-	;out (GETFILE_PORT), a 	; Get the 128 bytes from Arduino
-
-	ld 	de, FCB
-	ld	c, 21
-	call 	ENTRY		; Call BDOS to write these bytes to file
-	cp	2
-	jr      z, IMPORT_DISK_FULL
-	cp 	1
-	jr      z, IMPORT_NO_DIR
-
-	ld a, (65535)
-	cp 0
-	jr z, IMPORT_FINISHED
-
-	jp	IMPORT_MAIN_LOOP
-
-IMPORT_FINISHED:
-	; Finished so close file
-
-	ld	de, FCB
-	ld 	c, 16		; Close file
-	call	ENTRY		; Call BDOS to close file
-
-	call 	CRLF
-	ld 	de, IMPORT_MESSAGE_SUCCESS
-	ld 	c, 9		; Print String
-	call	ENTRY		; Call BDOS to print it
-	JP	GETBACK
-
-IMPORT_DISK_FULL:
-	call 	CRLF
-	ld 	de, IMPORT_MESSAGE_DISK_FULL
-	ld 	c, 9		; Print String
-	call	ENTRY		; Call BDOS to print it
-	jp	GETBACK
-
-IMPORT_NO_DIR:
-	call 	CRLF
-	ld 	de, IMPORT_MESSAGE_NO_DIR
-	ld 	c, 9		; Print String
-	call	ENTRY		; Call BDOS to print it
-	jp	GETBACK
-
-IMPORT_MESSAGE_DISK_FULL:
-	defb	"Disk full!$"
-IMPORT_MESSAGE_NO_DIR:
-	defb	"No directory space left!$"
-
-IMPORT_MESSAGE_INTRO:
-	defb "Importing a file from PC to CP/M...$"
-IMPORT_MESSAGE_SUCCESS:
-	defb "File imported!$"
-
-;
-;**************************************************************
-;*
-;*             E X P O R T   C O M M A N D
-;*
-;**************************************************************
-;
-; This takes the name of a file from the command line.
-; It first checks that the file is present on disk.
-; It then opens the file and works its way through it one sector at a time.
-; It reads data from the file and sends it to the Arduino.
-; The arduino saves sector on to SD card.
-; Finally we close the file.
-;
-exportbyteslow:
-	dw 0
-exportbyteshigh:
-	dw 0
-
-EXPORT_COMMAND:
-	call	STDDMA		; Set the standard DMA address
-
-	call 	CRLF
-	ld 	de, EXPORT_MESSAGE_INTRO
-	ld 	c, 9		; Print String
-	call	ENTRY		; Call BDOS to print it
-	call 	CRLF
-
-	CALL	CONVFST		;convert file name.
-	JP	NZ,SYNERR	;wild cards not allowed.
-	CALL	DSELECT		;and select this drive.
-	CALL	SRCHFCB		;is this file present?
-	JP	Z,EXPORT_ERROR_FILE_NOT_FOUND	;no, print error message.
-
-	;ld 	a, StartExportCommand
-	;out 	(port), a
-	ld 	hl, FCB+1
-	ld 	b, 11
-EXPORT_COMMAND_SEND_NAME_LOOP:
-	ld 	a, (hl)		; Send the filename to the Arduino, 8 + 3 letters
-	;out	(port), a
-	inc 	hl
-	djnz	EXPORT_COMMAND_SEND_NAME_LOOP
-
-	;call debug
-	;db "CCP open the file", 13, 10, 0
-
-	; Open the file
-	ld	de, FCB
-	ld 	c, 15		; Open file
-	call	ENTRY		; Call BDOS to open file
-
-	;call debug
-	;db "CCP read a sector", 13, 10, 0
-
-	; Loop through getting each sector in turn until none remainder
-	; We read it into the standard DMA location (TBUFF), then send each
-	; byte to the Arduino
-EXPORT_LOOP:
-	ld	de, TBUFF
-	ld 	c, 26			; Set DMA address
-	call	ENTRY			; Call BDOS
-
-	ld	de, FCB
-	ld 	c, 20			; Read sequential
-	call	ENTRY			; Call BDOS
-	cp	0
-	jr	nz, EXPORT_NO_MORE_DATA
-
-	;call debug
-	;db "CCP export a sector", 13, 10, 0
-
-	;ld 	a, ContinueExportCommand	; Every block of 128 bytes is preceeded by a "continue" command
-	;out 	(port), a
-
-	ld	hl, TBUFF		; Point to start of the DMA buffer
-	ld 	b, 128			; Count for 128 bytes of this sector
-EXPORT_BYTE_LOOP:
-	ld	a, (hl)
-	;out	(port), a		; Send a byte to the Arduino
-	inc	hl			; Point to next byte
-	djnz	EXPORT_BYTE_LOOP	; Do all 128 bytes
-	jr	EXPORT_LOOP		; Continue to next sector
-
-EXPORT_NO_MORE_DATA:
-	; Close the file
-
-	call debug
-	db "CCP close the file", 13, 10, 0
-
-	ld	de, FCB
-	ld 	c, 16		; Close file
-	call	ENTRY		; Call BDOS to close file
-
-	;ld 	a, EndExportCommand
-	;out 	(port), a
-
-	call 	CRLF
-	ld 	de, EXPORT_MESSAGE_SUCCESS
-	ld 	c, 9		; Print String
-	call	ENTRY		; Call BDOS to print it
-	JP	GETBACK
-
-EXPORT_ERROR_FILE_NOT_FOUND:
-	call 	CRLF
-	ld 	de, EXPORT_MESSAGE_FILE_NOT_FOUND
-	ld 	c, 9		; Print String
-	call	ENTRY		; Call BDOS to print it
-	jp	GETBACK
-
-EXPORT_MESSAGE_FILE_NOT_FOUND:
-	defb "ERROR: File not found.$"
-EXPORT_MESSAGE_INTRO:
-	defb "Exporting a file from CP/M to SD...$"
-EXPORT_MESSAGE_SUCCESS:
-	defb "File exported!$"
 
 
 ;**************************************************************
