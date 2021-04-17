@@ -5,6 +5,10 @@
   * [Bootloader](#bootloader)
 * [CP/M Distribution Overview](#cpm-distribution-overview)
   * [CP/M System Changes](#cpm-system-changes)
+    * [Search Path](#search-path)
+    * [Input Handling](#input-handling)
+    * [Removals](#removals)
+    * [TODO?](#todo)
   * [CP/M Binaries](#cpm-binaries)
 * [Useful Links](#useful-links)
 * [Future Plans?](#future-plans)
@@ -95,9 +99,11 @@ Or:
 
 ### CP/M System Changes
 
-In terms of changing the system-core I have patched the CCP (command-processor) component of CP/M to add a naive "search path".  This allows commands to be executed from a different drive if not found in the present one.
+In terms of changing the system-core I have patched the CCP (command-processor) component of CP/M to change two things:
 
-By default no search drive is set:
+#### Search Path
+
+I've added a naive "search path", which allows commands to be executed from a different drive if not found in the present one.  By default nothing is configured:
 
      A>srch
      No search drive is configured
@@ -112,14 +118,23 @@ Now configure things to look for unknown commands on the A: drive, confirming th
      B>cls
      [ screen clears ]
 
+#### Input Handling
+
+I've updated the input-handler ("Read Console Buffer" / BIOS function 1) such that:
+
+* The backspace key deletes the most recently entered character.
+  * (This is in addition to the keystroke `C-h` continuing to work in that same way.)
+* Ctrl-c cancels input.
+  * (It returns an empty input-buffer, so it allows easy discarding.)
+
+Now these two keystrokes work in a natural fashion at the CP/M prompt.
+
+
+#### Removals
+
 I've removed the undocumented (imp)ort and (exp)ort commands, to cut down on space, and avoid confusion.
 
-I've just updated the input-handler such that:
-
-* The backspace key deletes the most recently entered character at the CP/M prompt.
-  * (This is in addition to the keystroke `C-h` continuing to work in that same way.)
-* Ctrl-c entered at the CP/M prompt cancels input.
-  * (It returns an empty input-buffer, so it allows easy discarding.)
+#### TODO?
 
 Possible future changes might involve:
 
