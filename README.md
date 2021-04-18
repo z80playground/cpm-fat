@@ -30,7 +30,7 @@ For more details of the board please see the official homepage:
 This repository contains two things:
 
 * The assembly language source-files which will build CP/M.
-* A set of binaries, organized into [distinct drives](#cpm-binaries), which can be copied to your USB-stick to produce a useful system.
+* A set of binaries, organized into [distinct drives](#cpm-distribution-overview), which can be copied to your USB-stick to produce a useful system.
   * Some of the binaries are generated from the sources beneath [utils/](utils/), others are were obtained from historical release archives.
 
 
