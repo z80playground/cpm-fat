@@ -67,24 +67,24 @@ The full content of the USB stick supplied with the kit can be found beneath the
 CP/M doesn't have the concept of sub-directories, so all files are arranged at the top-level, however for organization different "drives" are used.  To help keep things organize I've shuffled some of the contents around such that the binaries are grouped into a set of logical collections:
 
 
-| Drive  | Contents                        | Notes                    |
-| ------ | ------------------------------- | ------------------------ |
-| A:     | All general-purpose utilities.  |                          |
-| B:     | BASIC Code and interpreter.     | Type `SYSTEM` to exit :) |
-| C:     | AzTec C Compiler                |                          |
-| D:     |                                 |                          |
-| E:     | Editor - WordStar               |                          |
-| F:     | FORTH - DxForth                 |                          |
-| G:     | Games - all types               |                          |
-| H:     |                                 |                          |
-| I:     |                                 |                          |
-| J:     |                                 |                          |
-| K:     |                                 |                          |
-| L:     |                                 |                          |
-| M:     |                                 |                          |
-| N:     |                                 |                          |
-| O:     |                                 |                          |
-| P:     | Turbo Pascal 3.00A              |                          |
+| Drive  | Contents                        | Notes                                          |
+| ------ | ------------------------------- | ------------------------                       |
+| A:     | All general-purpose utilities.  |                                                |
+| B:     | BASIC Code and interpreter.     | Type `SYSTEM` to exit :)                       |
+| C:     | AzTec C Compiler                | [Simple overview](C.md)                        |
+| D:     |                                 |                                                |
+| E:     | Editor - WordStar               |                                                |
+| F:     | FORTH - DxForth                 |                                                |
+| G:     | Games - all types               |                                                |
+| H:     |                                 |                                                |
+| I:     |                                 |                                                |
+| J:     |                                 |                                                |
+| K:     |                                 |                                                |
+| L:     |                                 |                                                |
+| M:     |                                 |                                                |
+| N:     |                                 |                                                |
+| O:     |                                 |                                                |
+| P:     | Turbo Pascal 3.00A              | [Getting started with Turbo Pascal](TURBO.md). |
 
 To look at the list of games, for example, you'll run something like this:
 
