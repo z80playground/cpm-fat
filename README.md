@@ -134,6 +134,15 @@ Now these two keystrokes work in a natural fashion at the CP/M prompt.
 
 I've removed the undocumented (imp)ort and (exp)ort commands, to cut down on space, and avoid confusion.
 
+This meant I could remove a little code from the CCP source, includeing:
+
+* `debug:`
+* `ADD32:` / `SUBTRACT32:`
+* `display_hl32:` and `show_c_in_hex:`
+
+If required those could be replaced by the existing code in [message.asm](message.asm) - just add an `include` and use them as-is.
+
+
 #### TODO?
 
 Possible future changes might involve:
