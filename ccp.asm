@@ -1129,9 +1129,6 @@ USER:
 DU_COMMAND:
 	call	CRLF
 
-	call 	debug
-	db 	"= DU", 13, 10, 0
-
 	;call	CRLF
 	;jp 	GETBACK
 
@@ -1145,21 +1142,9 @@ DU_COMMAND:
 	ld	bc, 16
 	ldir				; Copy file name into FCB
 
-	call 	debug
-	db 	"= Open", 13, 10, 0
-
 	ld	de, FCB
 	ld	c, 15			; open file
 	call	ENTRY			; by calling BDOS
-
-	call 	debug
-	db 	"= Result = ", 0
-
-	ld	c, a			; Get error code if any
-	call 	show_c_in_hex
-
-	call	debug
-	db	13, 10, "= DMA", 13, 10, 0
 
 SECTOR_COUNTER_LOOP:
 	ld	de, TBUFF
@@ -1184,9 +1169,6 @@ SECTOR_COUNTER_LOOP:
 	ld	b, 128
 	ld	d, 64
 SHOW_SECTOR_LOOP:
-	;ld	c, (hl)
-	;call	show_c_in_hex
-	;ld	a, ' '
 	ld	a, (hl)
 	out	(0), a
 	dec	d
@@ -1215,12 +1197,6 @@ NOT_END_OF_LINE:
 	ld 	a, h
 	cp	0
 	jr	nz, 	SECTOR_COUNTER_LOOP
-
-
-
-
-	call	debug
-	db	"= CLOSE", 13, 10, 0
 
 	; Close the file
 	ld	de, FCB
@@ -1439,158 +1415,6 @@ GETBACK1: CALL	CONVFST		;convert first name in (FCB).
 	OR	(HL)
 	JP	NZ,SYNERR
 	JP	CMMND1		;ok, return to command level.
-
-; Some subroutines added by John Squires to help with the new IMPort command
-
-; 32-bit addition.
-; Input:
-; 32-bit number in H'L'HL
-; 32-bit number in D'E'DE
-; Result:
-; H'L'HL = H'L'HL + D'E'DE
-ADD32:
-	or	a	; Clear carry flag
-    adc	hl, de	; First, perform 16 bit addition for least-significant 16 bits
-    exx
-    adc     hl, de 	; Now deal with upper 16 bits, including carry from first stage
-    exx
-    ret
-
-; 32-bit subtraction.
-; Input:
-; 32-bit number in H'L'HL
-; 32-bit number in D'E'DE
-; Result:
-; H'L'HL = H'L'HL - D'E'DE
-SUBTRACT32:
-	or	a	; Clear carry flag
-    sbc	hl, de	; First, perform 16 bit subtraction for least-significant 16 bits
-    exx
-    sbc     hl, de 	; Now deal with upper 16 bits, including carry from first stage
-    exx
-    ret
-
-; Display 32 bit number in h'l'hl
-display_hl32:
-	ld	de,34464
-	exx
-	ld 	de, 1
-	exx
-	call	display_hl32_digit
-
-	ld	de, 10000
-	exx
-	ld 	de, 0
-	exx
-	call	display_hl32_digit
-
-	ld	de, 1000
-	exx
-	ld 	de, 0
-	exx
-	call	display_hl32_digit
-
-	ld	de, 100
-	exx
-	ld 	de, 0
-	exx
-
-	call	display_hl32_digit
-	ld	e, 10
-	call	display_hl32_digit
-	ld	e, 1
-display_hl32_digit:
-	ld	a, '0'-1
-display_hl32_digit_loop:
-	inc	a
-	call	SUBTRACT32
-	jr	nc,display_hl32_digit_loop
-	call	ADD32
-	;out 	(PRINTCHAR_PORT), a
-	ret
-
-; --------------------------------------------
-; A temporary funciton to help with debugging
-
-debug:
-	; This expects to be called from code where the message follows the "call debug" line, like this:
-	; ld a, 10
-	; call debug
-	; db "my message", 0
-	; ld b, 10
-	;
-	; When we return we make sure sp is pointing to the next line of code after the message.
-
-	push af			; We have stored af, but decreased sp by 2
-	inc sp
-	inc sp			; adjust the stack to overlook the stored "af"
-
-	ld (store_hl), hl	; temporarily store hl
-	ex de, hl
-	ld (store_de), hl	; temporarily store de
-
-
-	ex (sp), hl		; top of stack is now mangled, but hl is pointing to our message
-
-debug_message_loop:
-	ld a, (hl)
-	cp 0
-	jr z, debug_message_complete
-	inc hl
-	;out (PRINTCHAR_PORT), a 		; print it
-	jr debug_message_loop
-
-debug_message_complete:
-	inc hl
-	ex (sp), hl		; restore top of stack, after we have incremented it so it points to the subsequent instruction
-
-	ld hl, (store_de)	; restore de
-	ex de, hl
-	ld hl, (store_hl)	; restore hl
-
-	dec sp
-	dec sp			; adjust stack because of our pushed "af"
-	pop af			; we have restored af
-
-	ret			; return to the instruction after the debug message
-
-store_hl:
-	defw 0			; Temporary store for hl
-store_de:
-	defw 0			; Temporary store for de
-
-show_c_in_hex:
-	push af
-	push hl
-	push bc
-	call show_c_in_hex_inner
-	pop bc
-	pop hl
-	pop af
-	ret
-
-show_hl_in_hex_inner:
-	ld  c,h
-	call  show_c_in_hex_inner
-	ld  c,l
-show_c_in_hex_inner:
-	ld  a,c
-	rra
-	rra
-	rra
-	rra
-	call convert_nibble_to_char
-	ld  a,c
-convert_nibble_to_char:
-	and  $0F
-	add  a,$90
-	daa
-	adc  a,$40
-	daa
-	;out (PRINTCHAR_PORT), a
-	ret
-
-;------------------------------------
 
 ;
 ;   ccp stack area.
