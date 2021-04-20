@@ -536,6 +536,16 @@ ERASE:                                   ; *** ERASE "filename" ***
         call tb_erase_file
         jp RSTART
 
+EXIT:                           ; When tinybasic is launched it is called
+                                ; from the monitor.
+                                ;
+                                ; So we know the ROM is mapped.
+                                ;
+                                ; We could preserve the stack and merely RET
+                                ; but instead we'll just jump to the 0x0000
+                                ; address.
+        jp 0x0000
+
 tb_erase_file:
         ;call message
         ;db 'Erasing file...',13,10,0
@@ -1669,8 +1679,9 @@ INIT:   LD  (OCSW),A
         db '  SAVE "filename"',CR,LF
         db '  LOAD "filename"',CR,LF
         db '  ERASE "filename"',CR,LF
+        db 'Return to the monitor with:',CR,LF
+        db '  EXIT',CR,LF
         db 'Other keywords:',CR,LF
-
         DB   '  REM, '
         DB   'NEW, '
         DB   'LIST, '
@@ -1761,6 +1772,8 @@ TAB1:                                    ; DIRECT COMMANDS
         DWA  LOAD
         DB   'ERASE'
         DWA  ERASE
+        DB   'EXIT'
+        DWA  EXIT
 
 TAB2:                                    ; DIRECT/STATEMENT
         DB   'NEXT'

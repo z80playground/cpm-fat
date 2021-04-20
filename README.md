@@ -10,6 +10,7 @@
     * [Removals](#removals)
     * [TODO?](#todo)
   * [CP/M Binaries](#cpm-binaries)
+  * [Bootloader Changes](#bootloader-changes)
 * [Useful Links](#useful-links)
 * [Future Plans?](#future-plans)
 
@@ -179,6 +180,12 @@ Possible future changes might involve:
     * Jump back to the monitor, from within the CP/M environment.
     * Essentially page in the ROM, then reboot.
 * I removed duplicate file-contents from various drives.
+
+
+### Bootloader Changes
+
+* I've patched TinyBASIC such that the `EXIT` keyword will restart the system.
+  * Otherwise there was no way back to the BIOS/menu short of hitting the reset-switch.
 
 
 # Useful Links
