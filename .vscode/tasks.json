@@ -7,7 +7,7 @@
             "label": "CPM-HEX",
             "type": "process",
             "command": "pasmo",
-            "args": ["--hex", "cpm.asm", "cpm.hex"],
+            "args": ["--hex", "cpm.asm", "cpm.hex", "cpm.symbols"],
             "problemMatcher": [],
             "group": {
                 "kind": "build",
