@@ -5,6 +5,7 @@
   * [Bootloader](#bootloader)
 * [CP/M Distribution Overview](#cpm-distribution-overview)
   * [CP/M System Changes](#cpm-system-changes)
+    * [CLS](#cls)
     * [Search Path](#search-path)
     * [Input Handling](#input-handling)
     * [Removals](#removals)
@@ -100,7 +101,13 @@ Or:
 
 ### CP/M System Changes
 
-In terms of changing the system-core I have patched the CCP (command-processor) component of CP/M to change two things:
+In terms of changing the system-core I have patched the CCP (command-processor) component of CP/M to change a couple of things:
+
+
+#### CLS
+
+There is a new built-in command `CLS` which will clear your screen.
+
 
 #### Search Path
 
@@ -169,7 +176,6 @@ Possible future changes might involve:
 * I added `ql.com` ("quick list")
   * After reading [this guide to text-pagers on CP/M](https://techtinkering.com/articles/text-viewers-on-cpm/).
 * I added a couple of simple utilities to [A:](dist/CPM/DISKS/A), with source beneath [utils/](utils/):
-  * `cls.com` - Clear the screen, by outputting an appropriate ANSI escape sequence.
   * `locate.com`
     * Find files matching a given pattern on **all** drives:
       * `LOCATE *.COM`.

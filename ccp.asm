@@ -586,6 +586,7 @@ CMDTBL:	DEFB	'DIR '
 	DEFB	'USER'
 	DEFB	'DU  '		; John's Disk Usage command
         DEFB    'SRCH'          ; Steve's search-path command
+        DEFB    'CLS '          ; Steve's CLS command
 CMDEND:
 ;
 ;
@@ -698,7 +699,7 @@ CMMND2:	LD	DE,TBUFF
 ;   CP/M command address table.
 ;
 CMDADR:	DEFW	DIRECT,ERASE,TYPE,SAVE
-	DEFW	RENAME,USER,DU_COMMAND,SEARCH_COMMAND,UNKNOWN
+	DEFW	RENAME,USER,DU_COMMAND,SEARCH_COMMAND,CLS_COMMAND,UNKNOWN
 ;
 ;   Halt the system. Reason for this is unknown at present.
 ;
@@ -1264,6 +1265,25 @@ SEARCH_PROMPT:
         DEFB    'Search drive set to ',0
 SEARCH_NOTHING:
         DEFB    'No search drive is configured',0
+
+
+
+;**************************************************************
+;
+;	Clear screen (CLS) command
+;
+;**************************************************************
+
+CLS_COMMAND:
+        LD      BC, CLEAR_SCREEN_ANSI
+        CALL    PLINE
+        JP      GETBACK
+
+CLEAR_SCREEN_ANSI:
+        db 27, "[2J"            ; "clear"
+        db 27, "[H"             ; "home"
+        db 0
+
 ;
 ;**************************************************************
 ;*
