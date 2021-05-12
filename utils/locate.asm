@@ -101,7 +101,7 @@ find_drives:
         ;; drives from P->A.
         ;;
         ;; Drive number will be stored in B
-        ld b, 15
+        ld b, 16
 find_loop:
         push bc
         call find_files_on_drive
@@ -123,11 +123,6 @@ find_files_on_drive:
         ;; B is called with the drive-number, drop it into the FCB
         ld hl, FCB1
         ld (hl),b
-
-        ;; Select the disk, explicitly - not sure if this is required.
-        ld c, BDOS_SELECT_DISK
-        ld e, b
-        call BDOS_ENTRY_POINT
 
         ;; Call the find-first BIOS function
         ld c, BDOS_FIND_FIRST
