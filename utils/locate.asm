@@ -101,7 +101,7 @@ find_drives:
         ;; drives from P->A.
         ;;
         ;; Drive number will be stored in B
-        ld b, 16
+        ld b, 15
 find_loop:
         push bc
         call find_files_on_drive
