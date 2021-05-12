@@ -111,20 +111,18 @@ There is a new built-in command `CLS` which will clear your screen.
 
 #### Search Path
 
-I've added a naive "search path", which allows commands to be executed from a different drive if not found in the present one.  By default nothing is configured:
+I've added a naive "search path", which allows commands to be executed from a different drive if not found in the present one.  By default the system is configured to search for binaries which were not found within the A: drive:
 
      A>srch
-     No search drive is configured
+     Search drive set to A
 
-Now configure things to look for unknown commands on the A: drive, confirming that via executing a command that lives there:
+If you wish to disable this run `SRCH 0`, otherwise you can change the drive:
 
-     A>b:
-     B>cls
-     CLS?
      B>srch a
      Search drive set to A
-     B>cls
-     [ screen clears ]
+     B>srch b
+     Search drive set to B
+
 
 #### Input Handling
 

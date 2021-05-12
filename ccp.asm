@@ -1455,4 +1455,4 @@ RTNCODE:DEFB	0		;status returned from bdos call.
 CDRIVE:	DEFB	0		;currently active drive.
 CHGDRV:	DEFB	0		;change in drives flag (0=no change).
 NBYTES:	DEFW	0		;byte counter used by TYPE.
-SEARCH_DRIVE:    DEFB 0         ;search drive
+SEARCH_DRIVE:    DEFB 1         ;search drive: default to A:
