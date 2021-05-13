@@ -6,7 +6,7 @@
 BDOS:       EQU 5
 PRINTCHR:   EQU 9
 uart_MCR:   EQU 12
-    
+
 START:
     LD A, %00101010
     OUT (uart_MCR),A
@@ -23,8 +23,11 @@ ST1:
     CALL BDOS
     RET
 
-GOOD:         DB 'Serial chip supports FlowControl.$'
-BAD:            DB 'Serial chip does not support FlowControl.$'
-WHAT:         DB 'No idea what serial chip this is.$'
+GOOD:
+        DB 'Serial chip supports FlowControl.$'
+BAD:
+        DB 'Serial chip does not support FlowControl.$'
+WHAT:
+        DB 'No idea what serial chip this is.$'
 
                      END

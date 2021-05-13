@@ -195,7 +195,7 @@ skip_user_number:
 ;;;
 ;;; NOTE: We assume the default DMA address of 0x0080
 ;;;
-print_matching_filename
+print_matching_filename:
 
         ;; Return code from find-first, or find-next, will be 0, 1, 2, or
         ;; 3 - and should be multiplied by 32 then added to the DMA area
@@ -296,6 +296,7 @@ newline:
 ;;; ***
 ;;; If this is non-zero we skip showing the user-number
 ;;;
-SHOW_USER_MARKER: db 0
+SHOW_USER_MARKER:
+     db 0
 
         END
