@@ -2,7 +2,7 @@
 #
 # The files we wish to generate.
 #
-all: chk16550.com cls.com locate.com monitor.com sd.com
+all: chk16550.com locate.com monitor.com sd.com
 
 
 #
