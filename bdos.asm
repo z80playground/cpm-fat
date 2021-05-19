@@ -201,6 +201,10 @@ BDOS_Read_Console_Buffer1:
     jr z, BDOS_Read_Console_Buffer_Backspace
     cp 127                      ; Backspace
     jr z, BDOS_Read_Console_Buffer_Backspace
+    cp 24                             ; ctrl-x -> empty line / cancel
+    jr z,BDOS_Read_Console_Clear_Line ;
+    cp 21                             ; ctrl-u -> empty line / cancle
+    jr z,BDOS_Read_Console_Clear_Line ;
     cp 3
     jr z,BDOS_Read_Console_Clear_Line ; ctrl-c -> reset line
     ld (de), a                  ; Store the char in the buffer
@@ -211,6 +215,17 @@ BDOS_Read_Console_Buffer1:
 BDOS_Read_Console_Buffer2:
     ld b, 0
     ret
+
+BDOS_Reboot_If_Start_of_line:
+        push af
+        ld a,(hl)
+        cp 0
+        jr z,reboot
+        pop af
+        jp BDOS_Read_Console_Clear_Line
+reboot:
+        pop af
+        jp 0
 
 BDOS_Read_Console_Clear_Line:
         ld (hl),0                   ; zero characters entered
