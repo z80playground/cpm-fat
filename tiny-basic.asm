@@ -1669,6 +1669,8 @@ INIT:   LD  (OCSW),A
         db '  SAVE "filename"',CR,LF
         db '  LOAD "filename"',CR,LF
         db '  ERASE "filename"',CR,LF
+        db 'Return to the monitor with:',CR,LF
+        db '  EXIT',CR,LF
         db 'Other keywords:',CR,LF
 
         DB   '  REM, '
@@ -1761,6 +1763,8 @@ TAB1:                                    ; DIRECT COMMANDS
         DWA  LOAD
         DB   'ERASE'
         DWA  ERASE
+        DB   'EXIT'
+        DB   0x00, 0x00
 
 TAB2:                                    ; DIRECT/STATEMENT
         DB   'NEXT'
