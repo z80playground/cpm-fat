@@ -184,7 +184,8 @@ Possible future changes might involve:
     * Jump back to the monitor, from within the CP/M environment.
     * Essentially page in the ROM, then reboot.
 * I removed duplicate file-contents from various drives.
-
+* The copy of `ls.com` located upon the [A:](dist/CPM/DISKS/A) drive has been updated.
+  * Via a couple of pull-requests to the [upstream source](https://github.com/z80playground/ls).
 
 ### Bootloader Changes
 
