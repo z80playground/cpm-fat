@@ -153,6 +153,7 @@ show_welcome_message:
 	db 'u = User LED toggle', 13, 10
 	db '3 = ROM ON', 13, 10
 	db '4 = ROM OFF', 13, 10
+	db '6 = UART Test', 13, 10
 	db 'd = Disk LED toggle', 13, 10
 	db '# = Execute HALT instruction',13,10
 	db 'b = Run burn-in test',13,10
