@@ -2,7 +2,7 @@
 #
 # The files we wish to generate.
 #
-all: bdos.bin bios.bin ccp.bin core.bin cpm.hex
+all: bdos.bin bios.bin ccp.bin core.bin z80ccp.bin cpm.hex
 
 
 #
