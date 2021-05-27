@@ -279,7 +279,8 @@ UPPER:	CP	'a'		;check for letters in the range of 'a' to 'z'.
 ; user is in (BATCH) mode. If so, then read the input from file
 ; ($$$.SUB). At the end, reset to console input.
 ;
-GETINP:	LD	A,(BATCH)	;if =0, then use console input.
+GETINP:
+        LD	A,(BATCH)	;if =0, then use console input.
 	OR	A
 	JP	Z,GETINP1
 ;
@@ -647,7 +648,7 @@ COMMAND:
 	LD	E,A
 	CALL	GETSETUC	;and set it.
 	CALL	RESDSK		;reset the disk system.
-	LD	(BATCH),A		;clear batch mode flag.
+	LD	(BATCH),A		;set/clear batch mode flag.
 	POP	BC
 	LD	A,C
 	AND	0FH				;isolate the drive number.

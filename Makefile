@@ -34,3 +34,9 @@ clean:
 
 %.hex: %.asm $$(shell ./gendep %.asm)
 	pasmo $<  $@
+
+
+sync:
+	cp *.bin dist/CPM/
+	cp *.hex dist/CPM/
+	rsync  -vazr dist/CPM/ /media/skx/8BITSTACK/CPM/
