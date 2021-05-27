@@ -120,9 +120,14 @@ not_t:
 
 not_g:
 	cp 'b'					; Burn-in test
-	jr nz, unknown_char
+	jr nz, not_b
     call burn_in
 	jp monitor_restart
+
+not_b:
+	cp 'j'					; Load jupiter.bin
+	jr nz, unknown_char
+    jp load_jupiter_ace
 
 unknown_char:
 	call print_a			; If we don't understand it, show it!
@@ -152,6 +157,7 @@ show_welcome_message:
 	db '# = Execute HALT instruction',13,10
 	db 'b = Run burn-in test',13,10
 	db '/ = Show this Menu',13,10
+	;db 'j = Poor-Man''s Jupiter Ace',13,10
 	db 13,10,0
 	ret
 
@@ -626,6 +632,53 @@ BURN_IN_NAME:
 
 include "printing.asm"
 include "test_uart.asm"
+
+load_jupiter_ace:
+    ; Load CORE.BIN into its proper location
+    ld hl, NAME_OF_CORE
+    call copy_filename_to_buffer
+    ld de, $F600 							; TODO: This can't be hardcoded, can it???
+    call load_bin_file
+	jr z, loaded_core_file
+	call message
+	db 'Failed to load CORE.BIN',13,10,0
+	halt
+
+loaded_core_file:	
+    call message
+    db 'CORE loaded!',13,10,0
+
+	; Get the file Jupiter.bin into memory at location 0.
+    ld hl, JUPITER_ACE_NAME
+    call copy_filename_to_buffer
+    ld de, 0								; Load it into location $0000             
+    call load_bin_file                      ; hl comes back with end location of file. Z set if success.
+	jr z, load_jupiter_ace1
+	call message
+	db 'Failed to load jupiter ace file.',13,10,0
+	halt
+load_jupiter_ace1:
+	call message
+	db 'Loaded jupiter ace file!',13,10,0
+	; Just a quick test:
+	call $F600+57
+	db 'Starting Juniper Deuce...',13,10,0
+
+	; Clear the screen
+	; ld hl, $2400
+	; ld (hl), '#'
+	; ld de, $2401
+	; ld bc, 767
+	; ldir
+
+	; Now run it.
+	; Now we need the ROM turned off:
+	call rom_off
+	jp 0									
+
+JUPITER_ACE_NAME:
+    db 'JUPITER.BIN',0
+
 
 
 the_end:

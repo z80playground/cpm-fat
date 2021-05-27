@@ -7,7 +7,7 @@
             "label": "CPM-HEX",
             "type": "process",
             "command": "pasmo",
-            "args": ["--hex", "cpm.asm", "cpm.hex"],
+            "args": ["--hex", "cpm.asm", "cpm.hex", "cpm.symbols"],
             "problemMatcher": [],
             "group": {
                 "kind": "build",
@@ -251,7 +251,7 @@
             "label": "copy_to_memory_stick",
             "type": "shell",
             "command": "copy",
-            "args": ["C:\\z80 playground\\source\\cpm-fat\\*.bin", "f:\\CPM\\"],
+            "args": ["C:\\z80 playground\\source\\cpm-fat\\*.bin", "E:\\CPM\\"],
             "problemMatcher": [],
             "group": "test",
             "presentation": {
@@ -317,6 +317,22 @@
             "type": "shell",
             "command": "copy",
             "args": ["C:\\z80 playground\\source\\cpm-fat\\chk16550.com", "d:\\cpm\\disks\\A\\chk16550.com"],
+            "problemMatcher": [],
+            "group": "test",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared",
+                "showReuseMessage": true,
+                "clear": true
+            }
+        },
+        {
+            "label": "eject_usb_d",
+            "type": "shell",
+            "command": "USB_Disk_Eject",
+            "args": ["/removeletter", "D"],
             "problemMatcher": [],
             "group": "test",
             "presentation": {
