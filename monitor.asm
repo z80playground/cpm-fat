@@ -180,10 +180,10 @@ monitor_init1:
     ret
 
 ram_fill:
-    ; Copy the first 16k of ROM down to ram
+    ; Copy the first 18k of ROM down to RAM
 	ld hl,0
 	ld de,0
-	ld bc, 1024*16
+	ld bc, 1024*18
 	ldir
     ret
 
