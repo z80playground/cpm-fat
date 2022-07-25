@@ -101,7 +101,7 @@ not6:
 not_hash:
 	cp 'c'					; CP/M
 	jr nz, not_c
-    call message 
+    call message
     db 'Starting CP/M... Make sure you have the "ROM Select" jumper set to "switched".',13,10,0
     jp start_cpm
 
@@ -165,7 +165,7 @@ monitor_init:
     ; Four flashes on the USER (blue) LED and disk (yellow) LED
     ld b, 4
 monitor_init1:
-    push bc    
+    push bc
 	call user_off
 	call disk_on
 	call medium_pause
@@ -203,25 +203,25 @@ show_memory_map:
 	call newline
 	ld de,0
 	ld b,64
-	
+
 map_loop:
 	push bc
-	
+
 	ld a,(de)			; get initial value
 	ld b,a
-	
-	ld a,0
+
+	xor a
 	ld (de),a			; see if a 0 stores
 	ld a,(de)
 	cp 0
 	jr nz,rom_location
-	
+
 	ld a,255
 	ld (de),a			; see if a 255 stores
 	ld a,(de)
 	cp 255
 	jr nz,rom_location
-	
+
 ram_location:
 	call message
 	db ' ',0
@@ -230,10 +230,10 @@ rom_location:
 	call message
 	db 27,'[41m','R',27,'[0m',0
 shown_location:
-	
+
 	ld a,b				; restore initial value
 	ld (de),a
-	
+
 	pop bc
 	ld hl, 1024
 	add hl,de
@@ -274,10 +274,10 @@ ram_loop:
 	ret
 
 	db 'DANGER ENDS '
-	
+
 ; -------------------------------------------------------------------------------------------------
 goto_page_0:
-	ld a, 0
+	xor a
 	ld (current_page),a
 	call newline
 	call show_page
@@ -304,7 +304,7 @@ burn_in:
 	; Draw empty box
 
 	ld a, 1
-	ld (burn_y), a				
+	ld (burn_y), a
 draw_loop_y:
 	call space
 	ld b, 35
@@ -323,11 +323,11 @@ draw_loop_x:
 
 	; Now main burn in loop
 
-	ld a, 0
-	ld (burn_y), a				
+	xor a
+	ld (burn_y), a
 burn_in_loop_y:
-	ld a, 0
-	ld (burn_x), a				
+	xor a
+	ld (burn_x), a
 burn_in_loop_x:
 	call full_ram_test
 	jp nz, burn_in_ram_error
@@ -349,13 +349,13 @@ burn_in_loop_x:
 burn_in_wait:
 	call char_in			; get a char from keyboard
 	cp 0					; If it's null, ignore it
-	jr z,burn_in_wait	
+	jr z,burn_in_wait
 	ret
 
 full_ram_test:
 	; Tests all of ram.
 	; Returns Z set if success.
-	ld hl, $FFFF 
+	ld hl, $FFFF
 full_ram_test1:
 	ld b, (hl)
 
@@ -370,7 +370,7 @@ full_ram_test1:
 	ret nz
 
 	ld (hl), b
-	dec hl 
+	dec hl
 	ld a, h
 	or l
 	jr nz, full_ram_test1
@@ -466,7 +466,7 @@ burn_in_read_file:
 	ld a, GET_STATUS
 	call send_command_byte
 	call read_data_byte
-	ld hl, burn_in_dump_area                       
+	ld hl, burn_in_dump_area
 burn_in_load_loop1:
 	cp USB_INT_DISK_READ
 	jr nz, burn_in_load_finished
@@ -494,7 +494,7 @@ burn_in_load_finished:
 	ld de, config_file_loc
 	ld hl, burn_in_dump_area
 	ld b, 10
-burn_in_compare_loop:	
+burn_in_compare_loop:
 	ld a, (de)
 	cp (hl)
 	jr nz, burn_in_compare_failed
@@ -525,11 +525,11 @@ burn_in_compare_failed:
 	ld hl, burn_in_dump_area
 	call show_string_at_hl
 	call newline
-	
+
 	halt
 
 burn_in_erase_file:
-	; Try to open the test file	
+	; Try to open the test file
 	call close_file
 	ld hl, ROOT_NAME
 	call open_file
@@ -560,7 +560,7 @@ burn_in_write_file:
 	call open_file
 	ld de, BURN_IN_NAME
 	call create_file
-	jr z, burnin_create_ok 
+	jr z, burnin_create_ok
 	call message
 	db 'ERROR creating burn-in file.',13,10,0
 	halt
@@ -573,7 +573,7 @@ burnin_create_ok:
 	call get_program_size
 	ld a, 10
 	call send_data_byte
-	ld a, 0
+	xor a
 	call send_data_byte
 
 	ld hl, config_file_loc
@@ -644,14 +644,14 @@ load_jupiter_ace:
 	db 'Failed to load CORE.BIN',13,10,0
 	halt
 
-loaded_core_file:	
+loaded_core_file:
     call message
     db 'CORE loaded!',13,10,0
 
 	; Get the file Jupiter.bin into memory at location 0.
     ld hl, JUPITER_ACE_NAME
     call copy_filename_to_buffer
-    ld de, 0								; Load it into location $0000             
+    ld de, 0								; Load it into location $0000
     call load_bin_file                      ; hl comes back with end location of file. Z set if success.
 	jr z, load_jupiter_ace1
 	call message
@@ -674,7 +674,7 @@ load_jupiter_ace1:
 	; Now run it.
 	; Now we need the ROM turned off:
 	call rom_off
-	jp 0									
+	jp 0
 
 JUPITER_ACE_NAME:
     db 'JUPITER.BIN',0
@@ -683,11 +683,11 @@ JUPITER_ACE_NAME:
 
 the_end:
 	db 'A message at the end ****************',0
-	
+
 ; ---------------------------------------------------------
 ; These are variables so need to be in RAM.
 ; Unfortunately I am dumb and initially put them in ROM.
-; I have learned my lesson!	
+; I have learned my lesson!
 
 ;store_hl		equ	60000					; Temporary store for hl
 ;store_de 		equ 60002					; Temporary store for de

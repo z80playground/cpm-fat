@@ -155,8 +155,6 @@ If required those could be replaced by the existing code in [message.asm](messag
 Possible future changes might involve:
 
 * Optimize for size.
-  * There are some simple changes which could be applied automatically.
-  * For example replacing "`ld b,0`" with `xor b`.
 * Look at `message.asm`
   * Which is a bit of a messy piece of code.
 

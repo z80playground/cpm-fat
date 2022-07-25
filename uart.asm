@@ -11,7 +11,7 @@ configure_uart:
 ; For the sake of definitely getting the job done, let's pause here for ages before doing it.
 ; Without this pause the Z80 can get started before the UART is ready.
 ; Don't ask me how I know this.
-; 
+;
 ; Pass in the required BAUD rate divisor in b.
 ; Pass in the required hardware flow control in c.
 	push bc
@@ -35,7 +35,7 @@ configure_uart:
 	ld a, b                       ; low byte of divisor
 	out (uart_tx_rx), a
 	nop
-	ld a, 0                       ; high byte
+	xor a                         ; high byte
 	out (uart_IER), a
 	nop
 
@@ -94,7 +94,7 @@ char_in:
 	in a, (uart_tx_rx)            ; Get the incoming char
 	ret                           ; Return it in A
 char_in1:
-	ld a, 0                       ; Return a zero in A
+	xor a                       ; Return a zero in A
 	ret
 
 char_available:
@@ -105,7 +105,7 @@ char_available:
 	ld a, $FF                     ; return true
 	ret                           ; in A
 char_available1:
-	ld a, 0                       ; Return a zero in A
+	xor a                       ; Return a zero in A
 	ret
 
 

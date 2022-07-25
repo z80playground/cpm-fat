@@ -362,7 +362,7 @@ BDOS_Open_File:
     call show_fcb
     ENDIF
 
-    ld a, 0
+    xor a
     jp bdos_open_file_internal
 
 bdos_open_file_internal:
@@ -565,7 +565,7 @@ BDOS_Delete_File:
     jr z, BDOS_Delete_File_done
 
     ; File found, so delete it
-    ld a, 0
+    xor a
     ld (delete_flag), a                             ; Store a success reult
 
     ; restore the drive letter saved from the originally requested file
@@ -1251,7 +1251,7 @@ initialise_fcb:
     ; Return zero-flag-set for success, zero-flag-reset for error. (Invalid filename for example)
     ; Also, preserves DE.
     push de
-    ld a, 0
+    xor a
     ld (de), a                          ; Set drive = default
     inc de
     ld b, 8
@@ -1267,7 +1267,7 @@ initialise_fcb1:
     inc de
     djnz initialise_fcb1
 initialise_fcb2                         ; Did we stop before 8 bytes reached?
-    ld a, 0
+    xor a
     cp b
     jr z, initialise_fcb3
     ld a, ' '
@@ -1289,7 +1289,7 @@ initialise_fcb5:
     inc de
     djnz initialise_fcb5
 initialise_fcb6:                        ; Did we stop before 3 bytes reached?
-    ld a, 0
+    xor a
     cp b
     jr z, initialise_fcb8
     ld a, ' '
@@ -1299,7 +1299,7 @@ initialise_fcb7:
     djnz initialise_fcb7
 initialise_fcb8:
     ld b, 24                            ; Put zeros in all the rest of the FCB
-    ld a, 0
+    xor a
 initialise_fcb9:
     ld (de), a
     inc de
@@ -1447,13 +1447,13 @@ increase_bcde:
     ld a, 1
     add a, e
     ld e, a
-    ld a, 0
+    xor a
     adc a, d
     ld d, a
-    ld a, 0
+    xor a
     adc a, c
     ld c, a
-    ld a, 0
+    xor a
     adc a, b
     ld b, a
     ret
@@ -1462,7 +1462,7 @@ clear_current_fcb:
     ; Clears the entire current FCB
     ld de, current_fcb+1
     ld hl, current_fcb
-    ld a, 0
+    xor a
     ld (hl), a
     ld bc, 11
     ldir
@@ -1666,7 +1666,7 @@ copy_fcb3:
     inc de
     djnz copy_fcb3
 copy_fcb4:
-    ld a, 0
+    xor a
     ld (de),a
     pop de
     ret
@@ -1720,7 +1720,7 @@ copy_fcb3_ps:
     inc de
     djnz copy_fcb3_ps
 copy_fcb4_ps:
-    ld a, 0
+    xor a
     ld (de),a
     pop de
     ret

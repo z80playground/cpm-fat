@@ -245,7 +245,7 @@ read_from_file:
 	call send_command_byte
 	ld a, 128                     ; Request 128 bytes
 	call send_data_byte
-	ld a, 0
+	xor a
 	call send_data_byte
 
 	call read_status_byte
@@ -333,7 +333,7 @@ send_data_string:
 	inc hl
 	jp send_data_string
 send_data_string_done:
-	ld a, 0
+	xor a
 	call send_data_byte
 	ret
 
@@ -613,4 +613,3 @@ SLASH:
 
 ; TXT_EXTENSION:
 ; db 'TXT',0
-

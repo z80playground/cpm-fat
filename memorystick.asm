@@ -169,13 +169,13 @@ matching_loop_good:
 	add hl, de
 	ex de, hl
 	ld b, 16+4
-	ld a, 0
+	xor a
 clear_allocation_loop:
 	ld (de), a
 	inc de
 	djnz clear_allocation_loop
 good_length1:
-	ld a, 0                       ; 0 = success
+	xor a                       ; 0 = success
 	ret
 
 dir_next:
@@ -322,7 +322,7 @@ dir_info_write:
 
 	ld a, WR_OFS_DATA
 	call send_command_byte
-	ld a, 0
+	xor a
 	call send_data_byte
 	ld a, $20
 	call send_data_byte
@@ -359,7 +359,7 @@ write_to_file:
 ; Send number of bytes we are about to write, as 16 bit number, low first
 	ld a, 128
 	call send_data_byte
-	ld a, 0
+	xor a
 	call send_data_byte
 
 	pop hl                        ; hl -> the data
@@ -501,7 +501,7 @@ check_cpmdisk_loop:
 	ld a, b
 	add a, 'A'-1
 	ld (filename_buffer), a
-	ld a, 0
+	xor a
 	ld (filename_buffer+1), a
 	ld hl, filename_buffer
 	call open_file
@@ -645,8 +645,8 @@ set_file_size_in_fcb:
 	rl b
 
 	inc hl
-	ld a, 0
-	ld (hl), 0                    ; Blank out the mystery byte called "unused"
+	xor a
+	ld (hl), a                    ; Blank out the mystery byte called "unused"
 	inc hl                        ; hl -> FCB.S2
 
 	ld a, d

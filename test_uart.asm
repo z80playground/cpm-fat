@@ -10,7 +10,7 @@ test_uart:
 
 test_uart0:
 	ld de, test_buffer
-	ld a, 0
+	xor a
 	ld (de), a                    ; Always make sure the buffer ends in null
 	ld b, 255                     ; max buffer length
 
@@ -29,7 +29,7 @@ test_uart1:
 test_uart_ok:
 	ld (de), a
 	inc de
-	ld a, 0
+	xor a
 	ld (de), a                    ; Always make sure the buffer ends in null
 	djnz test_uart1               ; Keep going until we run out of buffer
 
@@ -123,4 +123,3 @@ did_they_type_J:
 	ld a, (hl)
 	cp 0
 	ret
-

@@ -50,7 +50,7 @@ DWA     MACRO     v
         DB v & 0FFH
         ENDM
 
-TBSTART:  
+TBSTART:
         LD  SP,TBSTACK                     ; *** COLD START ***
         LD   A,0FFH
         JP  INIT
@@ -107,7 +107,7 @@ COMP:   LD   A,H                         ; *** COMP (was "rst 20h") ***
         CP  E                            ; BUT OLD A IS LOST
         RET
 
-IGNBLK: 
+IGNBLK:
         LD A,(DE)                        ; *** IGNBLK (was "rst 28h") ***
         CP  20H                          ; IGNORE BLANKS
         RET NZ                           ; IN TEXT (WHERE DE->)
@@ -343,12 +343,12 @@ NEW:    CALL ENDCHK                      ; *** NEW(CR) ***
 STOP:   CALL ENDCHK                      ; *** STOP(CR) ***
         JP  RSTART
 
-TBDIR:                                    ; *** DIR(CR) *** 
+TBDIR:                                    ; *** DIR(CR) ***
                                         ; This does a directory listing.
-        call ENDCHK                     
+        call ENDCHK
 
         ; Clear files counter
-        ld a, 0
+        xor a
         ld (tb_dir_count), a
 
         ; Open /TBASIC folder
@@ -356,7 +356,7 @@ TBDIR:                                    ; *** DIR(CR) ***
         call open_file
 
         ; Then open *
-        ld hl, STAR_DOT_STAR           
+        ld hl, STAR_DOT_STAR
         call open_file
 
         ; Loop through, printing the file names, one per line
@@ -419,7 +419,7 @@ tb_dir_show_extension_loop:
 
         jp tb_dir_next
 
-SAVE:                                   ; *** SAVE "filename" *** 
+SAVE:                                   ; *** SAVE "filename" ***
                                         ; This Saves the current program to USB Drive with the given name.
         push de
         call get_program_size
@@ -476,7 +476,7 @@ tb_save_continue:
 
         jp RSTART
 
-LOAD:                                   ; *** LOAD "filename" *** 
+LOAD:                                   ; *** LOAD "filename" ***
                                         ; This Loads a program from USB Drive
         call READ_QUOTED_FILENAME
         call does_file_exist
@@ -528,7 +528,7 @@ tb_load_finished:
         call close_file
         jp RSTART
 
-ERASE:                                   ; *** ERASE "filename" *** 
+ERASE:                                   ; *** ERASE "filename" ***
                                         ; This erases a file
         call READ_QUOTED_FILENAME
         call does_file_exist
@@ -1893,7 +1893,7 @@ CLEAR_FILENAME_LOOP:
         ld b, 8
 READ_FILE_NAME:
         LD A,(DE)                        ; GET A CHARACTER from string
-        INC  DE                          
+        INC  DE
         CP  '.'                         ; Found dot?
         jr z, CONTINUE_TO_EXTENSION
         CP  '"'                         ; Found end quote?
@@ -1903,7 +1903,7 @@ READ_FILE_NAME:
 
         cp 33
         jr c, KILL_CONTROL              ; Don't allow control chars or spaces!!!
-        cp 96                           
+        cp 96
         jr c, USE_LETTER                ; Do allow numbers and upper case letters
         cp 127
         jr nc, KILL_CONTROL             ; Don't allow weird chars
@@ -1918,7 +1918,7 @@ USE_LETTER:
         djnz READ_FILE_NAME
 
         LD A,(DE)                        ; GET A CHARACTER from string
-        INC  DE                          
+        INC  DE
         CP  '.'                         ; Found dot?
         jp nz, QWHAT                    ; Error if not
 CONTINUE_TO_EXTENSION:
@@ -1928,7 +1928,7 @@ CONTINUE_TO_EXTENSION:
         ld b, 3                         ; 3 chars max for extension
 READ_EXTENSION:
         LD A,(DE)                        ; GET A CHARACTER from string
-        INC  DE                          
+        INC  DE
         CP  '.'                         ; Found dot?
         jp z, QWHAT
         CP  '"'                         ; Found end quote?
@@ -1938,7 +1938,7 @@ READ_EXTENSION:
 
         cp 32
         jr c, KILL_CONTROL_EXT          ; Don't allow control chars
-        cp 96                           
+        cp 96
         jr c, USE_LETTER_EXT            ; Do allow numbers and upper case letters
         cp 127
         jr nc, KILL_CONTROL_EXT         ; Don't allow weird chars

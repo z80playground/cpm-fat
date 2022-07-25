@@ -9,7 +9,7 @@ include "core_jump.asm"
 
 bios_entry:
    	JP	BOOT	;COLD START
-WBOOTE:	
+WBOOTE:
     JP	WBOOT	;WARM START
     JP	CONST	;CONSOLE STATUS
     JP	CONIN	;CONSOLE CHARACTER IN
@@ -33,7 +33,7 @@ BOOT:
     db 27,'[2J'                     ; clear screen
     db 27,'[H'                      ; cursor home
     db 27,'[0m'                     ; clear attributes
-    db 27,'[?25h'                   ; Show cursor      
+    db 27,'[?25h'                   ; Show cursor
     db 'CP/M v2.2',13,10
     db 'Z80 Playground - 8bitStack.co.uk',13,10
     db 'Rel 1.10',13,10
@@ -79,11 +79,11 @@ shown_ccp_name:
     call CORE_user_off
 
     ; Set the drive and user to 0
-    ld a, 0
+    xor a
     ld (UDFLAG), a
 
     ; Roll through to the warm boot...
-WBOOT:	
+WBOOT:
     ld sp, BIOS_STACK
 
     call CORE_message
@@ -110,19 +110,19 @@ WBOOT:
     inc hl
     jp (hl) ; Note this means jump to hl, not jump to (hl)
 
-CONST:	
+CONST:
     ; RETURN 0FFH IF CHARACTER READY, 00H IF NOT
 	in a,(uart_LSR)			; get status from Line Status Register
 	bit 0,a					; zero flag set to true if bit 0 is 0 (bit 0 = Receive Data Ready)
 							; "logic 0 = no data in receive holding register."
 	jp z,CONST1	            ; zero = no char received
-	ld a, $FF		        ; return true
-	ret						; in A
+	ld a, $FF		    ; return true
+	ret			 ; in A
 CONST1:
-	ld a,0					; Return a zero in A
+	xor a			    ; Return a zero in A
 	ret
 
-CONIN:	
+CONIN:
     ; CONSOLE CHARACTER INTO REGISTER A
 	in a,(uart_LSR)			; get status from Line Status Register
 	bit 0,a					; zero flag set to true if bit 0 is 0 (bit 0 = Receive Data Ready)
@@ -131,43 +131,43 @@ CONIN:
 	in a,(uart_tx_rx)		; Get the incoming char
     ret
 
-CONOUT:	
+CONOUT:
     ld a, c
     call CORE_print_a
     ret
 
-LIST:	
+LIST:
     jp CONOUT
-PUNCH:	
+PUNCH:
     jp CONOUT
-READER:	
+READER:
     ld a, 'R'
     jp BIOS_MOAN
-HOME:	
+HOME:
     ld a, 'H'
     jp BIOS_MOAN
-SELDSK:	
+SELDSK:
     ld a, 'D'
     jp BIOS_MOAN
-SETTRK:	
+SETTRK:
     ld a, 'T'
     jp BIOS_MOAN
-SETSEC:	
+SETSEC:
     ld a, 'S'
     jp BIOS_MOAN
-SETDMA:	
+SETDMA:
     ld a, 'D'
     jp BIOS_MOAN
-READ:	
+READ:
     ld a, '<'
     jp BIOS_MOAN
-WRITE:	
+WRITE:
     ld a, '>'
     jp BIOS_MOAN
-LISTST:	
+LISTST:
     ld a, ':'
     jp BIOS_MOAN
-SECTRAN:	
+SECTRAN:
     ld a, '+'
     jp BIOS_MOAN
 

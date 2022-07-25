@@ -41,7 +41,7 @@ int:
 	ei
 	reti
 
-; NMI routine	
+; NMI routine
 	org $0066
 nmi:
 	ex af, af'
@@ -81,10 +81,10 @@ skip_over_int_and_nmi:
     call get_module_version
 
     ; Now read the baud rate configuration from uart.cfg
-    ld a, $FF 
+    ld a, $FF
     ld (baud_rate_divisor), a           ; Reset the two UART parameters
     ld (flow_control_value), a
-    ld a, 0
+    xor a
     ld (auto_run_char), a               ; Reset the auto-run character
     ld hl, UART_CFG_NAME
     call load_config_file
@@ -104,14 +104,14 @@ skip_over_int_and_nmi:
     db 'Configuring UART to settings in UART.CFG',13,10,0
 
     push bc
-    call message 
+    call message
     db 'BAUD ',0
     ld a, b
     call show_a_as_hex
     pop bc
 
     push bc
-    call message 
+    call message
     db ', FLOW ',0
     ld a, c
     call show_a_as_hex
@@ -154,7 +154,7 @@ start_cpm:
     call load_config_file
     ; Parse it to get out the locations
     call parse_cpm_config_file
-    call show_config    
+    call show_config
     call validate_config
 
     ; Load CORE.BIN into its proper location
@@ -197,7 +197,7 @@ load_config_file:
     ; Read it into an area of memory starting at config_file_loc
     ; and puts \0 at the end so we can spot the end of the file later
     call copy_filename_to_buffer
-    ld de, config_file_loc             
+    ld de, config_file_loc
     call load_bin_file                      ; hl comes back with end location of file. Z set if success.
     jp nz, load_config_file_error
     ld (hl), 0
@@ -303,7 +303,7 @@ parse_extension_loop:
     ; fall through to...
 
 parse_name_done:
-    ld a, 0                         ; null terminator for the name
+    xor a                           ; null terminator for the name
     ld (de), a
     cp a                            ; Set zero flag for success
     ret
@@ -363,7 +363,7 @@ not_auto_char:
 parse_4_digit_hex_value:
     ; hl = current location in file
     ; de = where we want to put the parsed value
-    ld a, 0                                 ; First, clear out the result area to zeros
+    xor a                                  ; First, clear out the result area to zeros
     ld (de), a
     inc de
     ld (de), a                              ; de now pointing to high byte of result area
@@ -412,14 +412,14 @@ parse_char:
     ld (de), a
     ret
 parse_char_blank:
-    ld a, 0
+    xor a
     ld (de), a
     ret
 
 parse_2_digit_hex_value:
     ; hl = current location in file
     ; de = where we want to put the parsed value
-    ld a, 0                                 ; First, clear out the result area to zeros
+    xor a                                 ; First, clear out the result area to zeros
     ld (de), a
 
     call get_cfg_char
@@ -701,7 +701,7 @@ is_this_line_the_ccp_name:
 is_this_line_NO:
     pop hl
     or 1                            ; clear zero flag for failure
-    ret    
+    ret
 
 has_file_ended:
     ; The file has ended if the next char is a \0
@@ -712,11 +712,11 @@ has_file_ended:
 get_cfg_char:
     ; Gets A from the next location in the config file, pointed to by HL.
     ; Increases hl so we skip over the char.
-    ; If the char is a \0 then we are at the end of the file, so return \0 and don't increase hl 
+    ; If the char is a \0 then we are at the end of the file, so return \0 and don't increase hl
     ld a, (hl)
     cp 0                            ; Have we found the end of the file?
     ret z                           ; and return
-get_cfg_char1:    
+get_cfg_char1:
     inc hl
     cp a                            ; Set zero flag for success
     ret
